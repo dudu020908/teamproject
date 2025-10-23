@@ -1,122 +1,283 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'model/candidate.dart';
+import 'providers/tournament_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const IdealWorldcupApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class IdealWorldcupApp extends StatelessWidget {
+  const IdealWorldcupApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    final samples = List<Candidate>.unmodifiable([
+      Candidate(
+        id: '1',
+        title: 'Cat',
+        imageUrl: 'https://picsum.photos/id/1025/600/800',
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      Candidate(
+        id: '2',
+        title: 'Dog',
+        imageUrl: 'https://picsum.photos/id/237/600/800',
+      ),
+      Candidate(
+        id: '3',
+        title: 'Fox',
+        imageUrl: 'https://picsum.photos/id/433/600/800',
+      ),
+      Candidate(
+        id: '4',
+        title: 'Panda',
+        imageUrl: 'https://picsum.photos/id/1062/600/800',
+      ),
+      Candidate(
+        id: '5',
+        title: 'Koala',
+        imageUrl: 'https://picsum.photos/id/443/600/800',
+      ),
+      Candidate(
+        id: '6',
+        title: 'Tiger',
+        imageUrl: 'https://picsum.photos/id/593/600/800',
+      ),
+      Candidate(
+        id: '7',
+        title: 'Lion',
+        imageUrl: 'https://picsum.photos/id/1074/600/800',
+      ),
+      Candidate(
+        id: '8',
+        title: 'Bear',
+        imageUrl: 'https://picsum.photos/id/582/600/800',
+      ),
+    ]);
+
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TournamentProvider(samples)),
+      ],
+      child: MaterialApp(
+        title: 'Ideal World Cup',
+        theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
+        home: const TournamentScreen(),
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class TournamentScreen extends StatelessWidget {
+  const TournamentScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Consumer<TournamentProvider>(
+          builder: (_, p, __) => Text(
+            p.state == TournamentState.playing ? '이상형 월드컵 · 진행중' : '우승자',
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<TournamentProvider>().reset(),
+            tooltip: '다시 시작',
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Consumer<TournamentProvider>(
+          builder: (context, p, _) {
+            if (p.state == TournamentState.finished) {
+              final w = p.winner!;
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _WinnerCard(title: w.title, imageUrl: w.imageUrl),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: p.reset,
+                      child: const Text('다시 하기'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final left = p.left;
+            final right = p.right;
+            if (left == null || right == null) {
+              // 페어 세팅 중 잠깐 빈 상태일 수 있음
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '현재 라운드 후보: ${p.currentRoundSize + p._nextRoundLengthDebug}명',
+                      ),
+                      Text('남은 대결: ${p.remainingPairs}'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _PickCard(
+                          title: left.title,
+                          imageUrl: left.imageUrl,
+                          onTap: p.chooseLeft,
+                        ),
+                      ),
+                      const VerticalDivider(width: 1),
+                      Expanded(
+                        child: _PickCard(
+                          title: right.title,
+                          imageUrl: right.imageUrl,
+                          onTap: p.chooseRight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+// 디버그 표기를 위해 Provider 내부 컬렉션 길이를 간접 노출 (UI 참고용)
+extension on TournamentProvider {
+  int get _nextRoundLengthDebug => 0; // 필요 시 디버그용으로 노출해도 됨
+}
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+class _PickCard extends StatefulWidget {
+  final String title;
+  final String imageUrl;
+  final VoidCallback onTap;
+
+  const _PickCard({
+    required this.title,
+    required this.imageUrl,
+    required this.onTap,
+  });
+
+  @override
+  State<_PickCard> createState() => _PickCardState();
+}
+
+class _PickCardState extends State<_PickCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ac = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 140),
+  );
+  late final Animation<double> _scale = Tween(
+    begin: 1.0,
+    end: 0.96,
+  ).animate(_ac);
+
+  @override
+  void dispose() {
+    _ac.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    await _ac.forward();
+    await _ac.reverse();
+    widget.onTap();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+    return InkWell(
+      onTap: _handleTap,
+      child: ScaleTransition(
+        scale: _scale,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            elevation: 2,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Image.network(
+                    widget.imageUrl,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (c, child, progress) => progress == null
+                        ? child
+                        : const Center(child: CircularProgressIndicator()),
+                    errorBuilder: (_, __, ___) =>
+                        const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+                ListTile(
+                  title: Text(
+                    widget.title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  trailing: const Icon(Icons.touch_app),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    );
+  }
+}
+
+class _WinnerCard extends StatelessWidget {
+  final String title;
+  final String imageUrl;
+  const _WinnerCard({required this.title, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        width: 320,
+        height: 420,
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          children: [
+            Expanded(
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
+            ),
+            ListTile(
+              title: Text(
+                '우승: $title',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              trailing: const Icon(Icons.emoji_events),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
