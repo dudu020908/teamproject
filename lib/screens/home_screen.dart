@@ -8,7 +8,7 @@ class HomeScreen extends StatelessWidget {
     appBar: AppBar(),
     body: Center(
       child: FilledButton(
-        onPressed: () => Navigator.pushNamed(context, '/topics'),
+        onPressed: () => Navigator.pushNamed(context, '/userinfo'),
         child: const Text('시작하기'),
       ),
     ),
