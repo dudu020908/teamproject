@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'themes/app_theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/user_info_screen.dart';
 import 'screens/topic_screen.dart';
 import 'screens/tournament_screen.dart';
 import 'screens/winner_screen.dart';
@@ -24,10 +25,11 @@ class IdealWorldcupApp extends StatelessWidget {
           themeMode: tm.mode,
           initialRoute: '/',
           routes: {
-            '/': (_) => const HomeScreen(), //메인화면
-            '/topics': (_) => const TopicScreen(), //메인에서 넘어가는주제 선택화면
-            '/play': (_) => const TournamentScreen(), //선택한 주제에 맞는 대결화면
-            '/result': (_) => const WinnerScreen(), //대결 종료, 우승한 결과화면
+            '/': (_) => const HomeScreen(),
+            '/userinfo': (_) => const UserInfoScreen(),
+            '/topics': (_) => const TopicScreen(),
+            '/play': (_) => const TournamentScreen(),
+            '/result': (_) => const WinnerScreen(),
           },
         ),
       ),
