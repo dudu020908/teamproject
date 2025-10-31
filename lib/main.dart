@@ -6,6 +6,7 @@ import 'screens/topic_screen.dart';
 import 'screens/tournament_screen.dart';
 import 'screens/winner_screen.dart';
 
+//복구
 void main() => runApp(const IdealWorldcupApp());
 
 class IdealWorldcupApp extends StatelessWidget {
