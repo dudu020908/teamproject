@@ -1,8 +1,4 @@
 # teamproject
-<<<<<<< HEAD
-
-A new Flutter project.# teamproject
-
 
 **development**
  - Flutter SDK: 3.35.3 (stable)
@@ -24,20 +20,3 @@ A new Flutter project.# teamproject
     - Figma 링크
   https://www.figma.com/make/ACiXiFHXxUDGV3ZPFPnhU6/MY-PICK-Worldcup-Onboarding?node-id=0-4&t=00l4ONxeX9AF3Bre-0
   
-
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
-모통구 팀프로젝트 
->>>>>>> bdf76ef3aa780c0b2ead3bd5788a58ca6f696b3a
