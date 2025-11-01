@@ -4,6 +4,7 @@ import 'package:teamproject/widgets/pick_winner_card.dart';
 
 class WinnerScreen extends StatelessWidget {
   const WinnerScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map?;
@@ -11,7 +12,7 @@ class WinnerScreen extends StatelessWidget {
     final winner = args?['winner'] as Candidate?;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('결과')),
+      appBar: AppBar(title: const Text('결과'), automaticallyImplyLeading: false),
       body: Center(
         child: winner == null
             ? const Text('우승자 없음')
@@ -23,7 +24,11 @@ class WinnerScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  WinnerCard(title: winner.title, imageUrl: winner.imageUrl),
+                  PickCard(
+                    title: winner.title,
+                    imageUrl: winner.imageUrl,
+                    onTap: () {},
+                  ),
                   const SizedBox(height: 8),
                   FilledButton(
                     onPressed: () => Navigator.popUntil(
