@@ -113,5 +113,6 @@ class TournamentProvider extends ChangeNotifier {
 
     // 다음 비교 인덱스
     _index += 2;
+    notifyListeners();
   }
 }
