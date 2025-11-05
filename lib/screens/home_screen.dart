@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:teamproject/screens/user_info_screen.dart';
+import 'package:teamproject/widgets/gradient_background.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -69,114 +70,97 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        // 바탕색 그라데이션 배경 효과
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFDFBFB), // 밝은 흰색
-              Color(0xFFE3F0FF), // 파스텔 하늘색
-              Color(0xFFFFE4EC), // 연핑크
-            ],
-            stops: [0.1, 0.6, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 왕관 원형 등장 애니메이션
-                ScaleTransition(
-                  scale: _scaleAnim1,
-                  child: Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 20,
-                          spreadRadius: 4,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.emoji_events,
-                        size: 64,
-                        color: Color(0xFFFFC107),
+      body: GradientBackground(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 왕관 원형 등장 애니메이션
+              ScaleTransition(
+                scale: _scaleAnim1,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 20,
+                        spreadRadius: 4,
+                        offset: const Offset(0, 8),
                       ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.emoji_events,
+                      size: 64,
+                      color: Color(0xFFFFC107),
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // My Pick 텍스트 (페이드 인)
-                FadeTransition(
-                  opacity: _fadeAnim1,
+              ),
+        
+              const SizedBox(height: 24),
+        
+              // My Pick 텍스트 (페이드 인)
+              FadeTransition(
+                opacity: _fadeAnim1,
+                child: const Text(
+                  "My Pick",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+        
+              const SizedBox(height: 8),
+        
+              // 부제 텍스트
+              FadeTransition(
+                opacity: _fadeAnim2,
+                child: const Text(
+                  "당신의 선택이 당신을 말해줍니다",
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+        
+              const SizedBox(height: 60),
+        
+              // 시작하기 버튼 (scale-in)
+              ScaleTransition(
+                scale: _scaleAnim2,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _navigateWithFade(context, const UserInfoScreen());
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1565C0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 60,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 5,
+                  ),
                   child: const Text(
-                    "My Pick",
+                    "시작하기",
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      letterSpacing: 1.2,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
-                // 부제 텍스트
-                FadeTransition(
-                  opacity: _fadeAnim2,
-                  child: const Text(
-                    "당신의 선택이 당신을 말해줍니다",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ),
-
-                const SizedBox(height: 60),
-
-                // 시작하기 버튼 (scale-in)
-                ScaleTransition(
-                  scale: _scaleAnim2,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _navigateWithFade(context, const UserInfoScreen());
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1565C0),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 60,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 5,
-                    ),
-                    child: const Text(
-                      "시작하기",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
