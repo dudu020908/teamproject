@@ -132,7 +132,6 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                           ),
 
                           const SizedBox(height: 24),
-
                           // 나이 선택
                           Container(
                             padding: const EdgeInsets.all(16),
@@ -147,6 +146,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                 ),
                               ],
                             ),
+                            clipBehavior: Clip.none,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -156,11 +156,15 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 Stack(
+                                  clipBehavior: Clip.none,
                                   alignment: Alignment.topCenter,
                                   children: [
                                     Positioned(
                                       top: -35,
-                                      child: Container(
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 150,
+                                        ),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 20,
                                           vertical: 6,
@@ -187,7 +191,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                         child: Text(
                                           "${age.toInt()}세",
                                           style: const TextStyle(
-                                            color: Colors.black,
+                                            color: Colors.black, //색바꿈
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
