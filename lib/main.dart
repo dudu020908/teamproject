@@ -4,7 +4,6 @@ import 'package:teamproject/providers/tournament_provider.dart';
 import 'package:teamproject/screens/user_info_screen.dart';
 import 'themes/app_theme.dart';
 import 'screens/home_screen.dart';
-import 'screens/user_info_screen.dart';
 import 'screens/topic_screen.dart';
 import 'screens/tournament_screen.dart';
 import 'screens/winner_screen.dart';
