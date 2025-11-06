@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:teamproject/model/candidate.dart';
 import 'package:teamproject/providers/tournament_provider.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
-import 'package:teamproject/widgets/dark_mode_toggle.dart'; 
-import 'package:teamproject/main.dart'; 
+import 'package:teamproject/widgets/dark_mode_toggle.dart';
+import 'package:teamproject/main.dart';
 
 class TopicScreen extends StatelessWidget {
   const TopicScreen({super.key});
@@ -28,7 +28,7 @@ class TopicScreen extends StatelessWidget {
         final textColor = isDark ? Colors.white : Colors.black87;
 
         return Scaffold(
-          backgroundColor: Colors.transparent,     
+          backgroundColor: Colors.transparent,
           body: GradientBackground(
             child: Stack(
               children: [
@@ -77,7 +77,14 @@ class TopicScreen extends StatelessWidget {
                             onTap: () {
                               final candidates = samplesForTopic(topic);
                               provider.setTopic(topic, candidates);
-                              Navigator.pushNamed(context, '/tournament');
+                              Navigator.pushNamed(
+                                context,
+                                '/roundselection',
+                                arguments: {
+                                  'topic': topic,
+                                  'emoji': _emojiForCategory(categoryName),
+                                },
+                              );
                             },
                           );
                         }).toList(),
@@ -138,6 +145,23 @@ class TopicScreen extends StatelessWidget {
         return const Icon(Icons.palette, color: Colors.deepPurpleAccent);
       default:
         return const Icon(Icons.category);
+    }
+  }
+
+  String _emojiForCategory(String category) {
+    switch (category) {
+      case '동물':
+        return '🐶';
+      case '디저트':
+        return '🍰';
+      case '자동차':
+        return '🏎️';
+      case '자연':
+        return '🌿';
+      case '미술':
+        return '🎨';
+      default:
+        return '💫';
     }
   }
 }

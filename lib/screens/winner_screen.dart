@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:teamproject/model/candidate.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/pick_winner_card.dart';
-import 'package:teamproject/widgets/dark_mode_toggle.dart'; 
-import 'package:teamproject/main.dart'; 
+import 'package:teamproject/widgets/dark_mode_toggle.dart';
+import 'package:teamproject/main.dart';
 
 class WinnerScreen extends StatelessWidget {
   const WinnerScreen({super.key});

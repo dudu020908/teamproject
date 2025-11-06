@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:teamproject/main.dart';
 import 'package:teamproject/screens/user_info_screen.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
