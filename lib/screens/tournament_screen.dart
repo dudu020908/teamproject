@@ -69,64 +69,65 @@ class _TournamentScreenState extends State<TournamentScreen> {
                             );
                           },
                           child: _isAnimating
-                            ? const SizedBox.shrink(key: ValueKey('gap'))
-                            : Row(
-                              key: ValueKey(
-                                // AnimatedSwitcher가 다음 라운드로 전환되게 하는 Key
-                                currentPair.map((c) => c.title).join(','),
-                              ),
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: currentPair.map((candidate) {
-                                // 선택되지 않은 카드는 사라지도록 처리
-                                
-                                return Expanded(
-                                  child: AnimatedScale(
-                                    // 선택된 카드를 살짝 축소시켜서 강조하는 효과
-                                    scale: _selected == candidate ? 0.95 : 1.0,
-                                    duration: const Duration(
-                                      milliseconds: 150,
-                                    ),
-                                    child: PickCard(
-                                      title: candidate.title,
-                                      imageUrl: candidate.imageUrl,
-                                      onTap: _isAnimating
-                                        ? () {} // 애니메이션 중에는 탭 무시
-                                        : () => _onSelect(
-                                          provider,
-                                          candidate,
+                              ? const SizedBox.shrink(key: ValueKey('gap'))
+                              : Row(
+                                  key: ValueKey(
+                                    // AnimatedSwitcher가 다음 라운드로 전환되게 하는 Key
+                                    currentPair.map((c) => c.title).join(','),
+                                  ),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: currentPair.map((candidate) {
+                                    // 선택되지 않은 카드는 사라지도록 처리
+
+                                    return Expanded(
+                                      child: AnimatedScale(
+                                        // 선택된 카드를 살짝 축소시켜서 강조하는 효과
+                                        scale: _selected == candidate
+                                            ? 0.95
+                                            : 1.0,
+                                        duration: const Duration(
+                                          milliseconds: 150,
+                                        ),
+                                        child: PickCard(
+                                          title: candidate.title,
+                                          imageUrl: candidate.imageUrl,
+                                          onTap: _isAnimating
+                                              ? () {} // 애니메이션 중에는 탭 무시
+                                              : () => _onSelect(
+                                                  provider,
+                                                  candidate,
+                                                ),
                                         ),
                                       ),
-                                    ),
-                                  
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          // 선택된 카드 애니메이터
-                          if (_selected != null && _isAnimating)
-                            PickWinnerAnimator(
-                              candidate: _selected!,
-                              // isLeftCard 정보 전달
-                              isLeftCard: _isLeftCardSelected,
-                              onAnimationComplete: () {
-                                // 애니메이션이 끝나면 다음 라운드로 넘어가기 위한 로직 실행
-                                provider.pickWinner(_selected!);
-            
-                                Future.delayed(
-                                  const Duration(milliseconds: 200),
-                                  () {
-                                    if (mounted) {
-                                      setState(() {
-                                        _selected = null;
-                                        _isAnimating = false;
-                                      });
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                          ],
+                                    );
+                                  }).toList(),
+                                ),
                         ),
+                        // 선택된 카드 애니메이터
+                        if (_selected != null && _isAnimating)
+                          PickWinnerAnimator(
+                            candidate: _selected!,
+                            // isLeftCard 정보 전달
+                            isLeftCard: _isLeftCardSelected,
+                            onAnimationComplete: () {
+                              // 애니메이션이 끝나면 다음 라운드로 넘어가기 위한 로직 실행
+                              provider.pickWinner(_selected!);
+
+                              Future.delayed(
+                                const Duration(milliseconds: 200),
+                                () {
+                                  if (mounted) {
+                                    setState(() {
+                                      _selected = null;
+                                      _isAnimating = false;
+                                    });
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                      ],
+                    ),
             ),
           ),
         );
