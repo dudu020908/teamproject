@@ -19,20 +19,19 @@ class TopicScreen extends StatelessWidget {
       '미술': ['클래식 아트'],
     };
 
-    return Scaffold( // Scaffold는 투명하게
+    return Scaffold(
+      // Scaffold는 투명하게
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('주제 선택'),
-        elevation: 0,
-      ),
-      body: GradientBackground( // 배경 감싸기
+      appBar: AppBar(title: const Text('주제 선택'), elevation: 0),
+      body: GradientBackground(
+        // 배경 감싸기
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final categoryName = categories.keys.elementAt(index);
             final topics = categories[categoryName]!;
-        
+
             return Card(
               color: Colors.white.withOpacity(0.85),
               elevation: 5,
@@ -56,7 +55,14 @@ class TopicScreen extends StatelessWidget {
                     onTap: () {
                       final candidates = samplesForTopic(topic);
                       provider.setTopic(topic, candidates);
-                      Navigator.pushNamed(context, '/tournament');
+                      Navigator.pushNamed(
+                        context,
+                        '/rounds',
+                        arguments: {
+                          'topic': topic,
+                          'emoji': _emojiForCategory(categoryName),
+                        },
+                      );
                     },
                   );
                 }).toList(),
@@ -82,6 +88,23 @@ class TopicScreen extends StatelessWidget {
         return const Icon(Icons.palette, color: Colors.deepPurpleAccent);
       default:
         return const Icon(Icons.category);
+    }
+  }
+
+  String _emojiForCategory(String category) {
+    switch (category) {
+      case '동물':
+        return '🐶';
+      case '디저트':
+        return '🍰';
+      case '자동차':
+        return '🏎️';
+      case '자연':
+        return '🌿';
+      case '미술':
+        return '🎨';
+      default:
+        return '💫';
     }
   }
 }
