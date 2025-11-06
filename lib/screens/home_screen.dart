@@ -102,9 +102,9 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
               ),
-        
+
               const SizedBox(height: 24),
-        
+
               // My Pick 텍스트 (페이드 인)
               FadeTransition(
                 opacity: _fadeAnim1,
@@ -118,9 +118,9 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
               ),
-        
+
               const SizedBox(height: 8),
-        
+
               // 부제 텍스트
               FadeTransition(
                 opacity: _fadeAnim2,
@@ -129,9 +129,9 @@ class _HomeScreenState extends State<HomeScreen>
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ),
-        
+
               const SizedBox(height: 60),
-        
+
               // 시작하기 버튼 (scale-in)
               ScaleTransition(
                 scale: _scaleAnim2,
