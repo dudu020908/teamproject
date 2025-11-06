@@ -11,7 +11,10 @@ import 'screens/winner_screen.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => TournamentProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => TournamentProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeModeNotifier()), // 테마 모드 관리
+      ],
       child: const IdealWorldcupApp(),
     ),
   );
@@ -30,7 +33,7 @@ class IdealWorldcupApp extends StatelessWidget {
           title: '이상형 월드컵',
           theme: AppTheme.light, //라이트모드
           darkTheme: AppTheme.dark, //다크모드
-          themeMode: tm.mode,
+          themeMode: tm.mode, // 토글 반영
           initialRoute: '/',
           routes: {
             '/': (_) => const HomeScreen(), //메인화면
