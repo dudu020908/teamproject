@@ -187,7 +187,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                         child: Text(
                                           "${age.toInt()}세",
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: Colors.black,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
