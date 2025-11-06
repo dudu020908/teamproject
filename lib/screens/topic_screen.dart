@@ -77,7 +77,14 @@ class TopicScreen extends StatelessWidget {
                             onTap: () {
                               final candidates = samplesForTopic(topic);
                               provider.setTopic(topic, candidates);
-                              Navigator.pushNamed(context, '/tournament');
+                              Navigator.pushNamed(
+                                context,
+                                '/roundselection',
+                                arguments: {
+                                  'topic': topic,
+                                  'emoji': _emojiForCategory(categoryName),
+                                },
+                              );
                             },
                           );
                         }).toList(),
