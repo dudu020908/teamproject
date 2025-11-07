@@ -23,6 +23,11 @@ class _TournamentScreenState extends State<TournamentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // arguments에서 rounds(몇 강) 정보 받아오기
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    final int? rounds = args?['rounds'] as int?;
+    final String roundsText = rounds != null ? ' (${rounds}강)' : '';
+
     // Consumer로 감싸서 다크모드 반영
     return Consumer2<ThemeModeNotifier, TournamentProvider>(
       builder: (context, themeNotifier, provider, child) {
@@ -46,7 +51,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('대결 – $topic'),
+            title: Text('대결 – $topic$roundsText'),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,

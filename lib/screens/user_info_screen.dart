@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:provider/provider.dart';
@@ -15,8 +16,26 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   String? gender;
   double age = 25;
 
-  void _next() {
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo(); // 저장된 유저 정보 불러오기
+  }
+
+  // 앱 실행 시 SharedPreferences에서 사용자 정보 로드
+  Future<void> _loadUserInfo() async {
+    final saved = await LocalStorageService.loadUserInfo();
+    if (saved != null) {
+      setState(() {
+        gender = saved['gender'];
+        age = (saved['age'] as int).toDouble();
+      });
+    }
+  }
+
+  void _next() async {
     if (gender != null) {
+      await LocalStorageService.saveUserInfo(gender!, age.toInt()); // 로컬 저장
       Navigator.pushNamed(
         context,
         '/topics',
