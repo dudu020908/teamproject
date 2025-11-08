@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../model/candidate.dart';
+import 'dart:math';
 
 enum TournamentState { playing, finished }
 
@@ -44,8 +45,14 @@ class TournamentProvider extends ChangeNotifier {
     _index = 0;
 
     _currentRound = List<Candidate>.from(candidates);
-    // 필요하면 섞기
+    // 필요하면 섞기(셔플)
+    _currentRound.shuffle(Random());
     // _currentRound.shuffle();
+    if (_currentRound.length.isOdd) {
+      final random = Random();
+      final bye = _currentRound.removeAt(random.nextInt(_currentRound.length));
+      _nextRound.add(bye);
+    }
 
     _dealNextPair();
     notifyListeners();
@@ -62,37 +69,77 @@ class TournamentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // === 선택 (두 방식 모두 지원) ===
-  void chooseLeft() => _choose(_left);
-  void chooseRight() => _choose(_right);
-  void pickWinner(Candidate selected) => _choose(selected);
+  // // === 선택 (두 방식 모두 지원) ===
+  // void chooseLeft() => _choose(_left);
+  // void chooseRight() => _choose(_right);
+  // void pickWinner(Candidate selected) => _choose(selected);
 
-  void _choose(Candidate? chosen) {
-    if (chosen == null) return;
-    _nextRound.add(chosen);
-    _dealNextPair();
-    notifyListeners();
-  }
+  // void _choose(Candidate? chosen) {
+  //   if (chosen == null) return;
+  //   _nextRound.add(chosen);
+  //   _dealNextPair();
+  //   notifyListeners();
+  // }
 
-  // === 라운드 진행 로직 ===
+  // // === 라운드 진행 로직 ===
+  // void _dealNextPair() {
+  //   _left = null;
+  //   _right = null;
+
+  //   // 현재 라운드 소진 시
+  //   if (_index >= _currentRound.length) {
+  //     // 다음 라운드 후보가 1명이면 우승 확정
+  //     if (_nextRound.length == 1) {
+  //       _winner = _nextRound.first;
+  //       _currentRound = <Candidate>[];
+  //       _nextRound.clear();
+  //       _index = 0;
+  //       return;
+  //     }
+  //     // 다음 라운드로 교체
+  //     _currentRound = List<Candidate>.from(_nextRound);
+  //     _nextRound.clear();
+  //     _index = 0;
+  //   }
+
+  // void pickWinner(Candidate selected) => _choose(selected);
+
+  // void _choose(Candidate? chosen) {
+  //   if (chosen == null) return;
+  //   _nextRound.add(chosen);
+  //   _dealNextPair();
+  //   notifyListeners();
+  // }
+
+  /// ✅ 라운드 진행
   void _dealNextPair() {
     _left = null;
     _right = null;
 
-    // 현재 라운드 소진 시
+    // 라운드 종료 시
     if (_index >= _currentRound.length) {
       // 다음 라운드 후보가 1명이면 우승 확정
       if (_nextRound.length == 1) {
         _winner = _nextRound.first;
-        _currentRound = <Candidate>[];
+        _currentRound = [];
         _nextRound.clear();
         _index = 0;
         return;
       }
+
       // 다음 라운드로 교체
       _currentRound = List<Candidate>.from(_nextRound);
       _nextRound.clear();
       _index = 0;
+
+      // ✅ 홀수면 부전승 처리 (다음 라운드도)
+      if (_currentRound.length.isOdd) {
+        final random = Random();
+        final bye = _currentRound.removeAt(
+          random.nextInt(_currentRound.length),
+        );
+        _nextRound.add(bye);
+      }
     }
 
     // 다음 페어 세팅
@@ -113,6 +160,12 @@ class TournamentProvider extends ChangeNotifier {
 
     // 다음 비교 인덱스
     _index += 2;
+    notifyListeners();
+  }
+
+  void pickWinner(Candidate selected) {
+    _nextRound.add(selected);
+    _dealNextPair();
     notifyListeners();
   }
 }
