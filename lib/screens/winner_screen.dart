@@ -1,13 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamproject/model/candidate.dart';
+import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/pick_winner_card.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/main.dart';
 
-class WinnerScreen extends StatelessWidget {
+class WinnerScreen extends StatefulWidget {
   const WinnerScreen({super.key});
+
+  @override
+  State<WinnerScreen> createState() => _WinnerScreenState();
+}
+
+class _WinnerScreenState extends State<WinnerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _saveResult(); // 위너 정보 로컬 저장
+    }); 
+  }
+
+  /// 결과 저장 함수
+  Future<void> _saveResult() async {
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    if (args != null) {
+      final topic = args['topic'] as String?;
+      final winner = args['winner'] as Candidate?;
+      if (topic != null && winner != null) {
+        await LocalStorageService.saveResult(topic, winner.title);
+        print('로컬 저장 완료: topic=$topic, winner=${winner.title}');
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
