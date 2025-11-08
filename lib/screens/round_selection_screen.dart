@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
+import 'package:teamproject/model/candidate.dart';
+import '../providers/tournament_provider.dart';
 import 'package:teamproject/main.dart';
 
 class RoundSelectionScreen extends StatefulWidget {
@@ -55,6 +57,30 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
       _showSnackBar("⚠️ 8~128 사이의 숫자만 입력 가능합니다", isDark);
       return;
     }
+    // Provider 초기화,데이터 전달
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    final topic = args?['topic'] ?? widget.categoryTitle;
+
+    final provider = Provider.of<TournamentProvider>(context, listen: false);
+    final candidates = samplesForTopic(topic);
+
+    // ✅ 후보가 부족한 경우 차단
+    if (candidates.length < num) {
+      _showSnackBar(
+        "⚠️ 후보 수(${candidates.length}명)가 ${num}강을 진행하기에 부족합니다!",
+        isDark,
+      );
+      return; // 시작 안 함
+    }
+
+    List<Candidate> selectedCandidates = List.from(candidates);
+    selectedCandidates.shuffle();
+
+    if (selectedCandidates.length > num) {
+      selectedCandidates = selectedCandidates.take(num).toList();
+    }
+
+    provider.startTournament(topic, selectedCandidates);
 
     Navigator.pushNamed(context, '/tournament', arguments: {'rounds': num});
   }

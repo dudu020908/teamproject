@@ -1,129 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:teamproject/model/candidate.dart';
-import 'package:teamproject/providers/tournament_provider.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/main.dart';
 
-class TopicScreen extends StatelessWidget {
+class TopicScreen extends StatefulWidget {
   const TopicScreen({super.key});
 
   @override
+  State<TopicScreen> createState() => _TopicScreenState();
+}
+
+class _TopicScreenState extends State<TopicScreen> {
+  Map<String, dynamic>? selectedCategory; // 현재 선택된 큰 카테고리
+  String? selectedSub; // 선택된 세부 항목
+
+  final List<Map<String, dynamic>> categories = [
+    {
+      'title': '연예인 이상형',
+      'emoji': '💘',
+      'image':
+          'https://images.unsplash.com/photo-1740459057005-65f000db582f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+      'subtopics': ['아이돌', '배우', '가수', '예능인'],
+    },
+    {
+      'title': '패션 스타일',
+      'emoji': '👗',
+      'image':
+          'https://images.unsplash.com/photo-1567523680125-43c5dae7e2fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+      'subtopics': ['스트릿', '캐주얼', '빈티지', '하이패션'],
+    },
+    {
+      'title': '식사 궁합',
+      'emoji': '🍖',
+      'image':
+          'https://images.unsplash.com/photo-1736604522360-608c09900076?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+      'subtopics': ['한식', '양식', '일식', '분식'],
+    },
+    {
+      'title': '반려동물',
+      'emoji': '🐶',
+      'image':
+          'https://images.unsplash.com/photo-1519134991647-f069322dfe22?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+      'subtopics': ['강아지', '고양이', '토끼', '햄스터'],
+    },
+    {
+      'title': '감정 스타일',
+      'emoji': '🎨',
+      'image':
+          'https://images.unsplash.com/photo-1699568542323-ff98aca8ea6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+      'subtopics': ['낭만적', '감성적', '유머러스', '차분함'],
+    },
+    {
+      'title': '카페 메뉴',
+      'emoji': '☕',
+      'image':
+          'https://images.unsplash.com/photo-1613187984497-483b0d1df052?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+      'subtopics': ['커피', '디저트', '브런치'],
+    },
+  ];
+
+  void _startSubtopic(String subtopic) {
+    Navigator.pushNamed(
+      context,
+      '/roundselection',
+      arguments: {'topic': subtopic, 'emoji': selectedCategory!['emoji']},
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final provider = context.read<TournamentProvider>();
-
-    final Map<String, List<String>> categories = {
-      '동물': ['고양이', '강아지'],
-      '디저트': ['디저트'],
-      '자동차': ['스포츠카'],
-      '자연': ['풍경'],
-      '미술': ['클래식 아트'],
-    };
-
-    // Consumer로 감싸서 다크모드 즉시 반영
     return Consumer<ThemeModeNotifier>(
       builder: (context, themeNotifier, _) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final textColor = isDark ? Colors.white : Colors.black87;
+        final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+        final boxColor = isDark ? Colors.grey[850]! : Colors.white;
 
         return Scaffold(
           backgroundColor: Colors.transparent,
           body: GradientBackground(
-            child: Stack(
-              children: [
-                ListView.builder(
-                  padding: const EdgeInsets.only(
-                    top: 140,
-                    bottom: 16,
-                    left: 12,
-                    right: 12,
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  // 전체 컨텐츠 스위치
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    child: selectedCategory == null
+                        ? _buildMainCategoryView(
+                            textColor,
+                            subTextColor,
+                            boxColor,
+                          )
+                        : _buildSubtopicView(textColor, subTextColor, boxColor),
                   ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final categoryName = categories.keys.elementAt(index);
-                    final topics = categories[categoryName]!;
 
-                    return Card(
-                      color: isDark
-                          ? Colors.grey[850]
-                          : Colors.white.withOpacity(0.85),
-                      elevation: 5,
-                      margin: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ExpansionTile(
-                        leading: _categoryIcon(categoryName),
-                        title: Text(
-                          categoryName,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        children: topics.map((topic) {
-                          return ListTile(
-                            title: Text(
-                              topic,
-                              style: TextStyle(color: textColor),
-                            ),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 18,
-                              color: textColor,
-                            ),
-                            onTap: () {
-                              final candidates = samplesForTopic(topic);
-                              provider.setTopic(topic, candidates);
-                              Navigator.pushNamed(
-                                context,
-                                '/roundselection',
-                                arguments: {
-                                  'topic': topic,
-                                  'emoji': _emojiForCategory(categoryName),
-                                },
-                              );
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    );
-                  },
-                ),
-
-                // 상단 안내 문구
-                Positioned(
-                  top: 40,
-                  left: 20,
-                  right: 20,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "어떤 월드컵을 해볼까요?",
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "원하는 카테고리를 선택해주세요",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isDark ? Colors.grey[300] : Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 상단 다크모드 토글 버튼
-                const DarkModeToggle(),
-              ],
+                  // 다크모드 토글
+                  const DarkModeToggle(),
+                ],
+              ),
             ),
           ),
         );
@@ -131,37 +106,207 @@ class TopicScreen extends StatelessWidget {
     );
   }
 
-  Widget _categoryIcon(String category) {
-    switch (category) {
-      case '동물':
-        return const Icon(Icons.pets, color: Colors.orangeAccent);
-      case '디저트':
-        return const Icon(Icons.cake, color: Colors.pinkAccent);
-      case '자동차':
-        return const Icon(Icons.directions_car, color: Colors.blueAccent);
-      case '자연':
-        return const Icon(Icons.landscape, color: Colors.green);
-      case '미술':
-        return const Icon(Icons.palette, color: Colors.deepPurpleAccent);
-      default:
-        return const Icon(Icons.category);
-    }
+  // 메인 카테고리
+  Widget _buildMainCategoryView(
+    Color textColor,
+    Color? subTextColor,
+    Color boxColor,
+  ) {
+    return LayoutBuilder(
+      key: const ValueKey('mainView'),
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  Text(
+                    "어떤 월드컵을 해볼까요?",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "원하는 카테고리를 선택해주세요",
+                    style: TextStyle(fontSize: 16, color: subTextColor),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1,
+                          ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        return GestureDetector(
+                          onTap: () =>
+                              setState(() => selectedCategory = category),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.network(
+                                  category['image'],
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.black.withOpacity(0.6),
+                                      Colors.transparent,
+                                    ],
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                  ),
+                                ),
+                              ),
+                              Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      category['emoji'],
+                                      style: const TextStyle(fontSize: 36),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      category['title'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  String _emojiForCategory(String category) {
-    switch (category) {
-      case '동물':
-        return '🐶';
-      case '디저트':
-        return '🍰';
-      case '자동차':
-        return '🏎️';
-      case '자연':
-        return '🌿';
-      case '미술':
-        return '🎨';
-      default:
-        return '💫';
-    }
+  // 세부 주제 화면
+  Widget _buildSubtopicView(
+    Color textColor,
+    Color? subTextColor,
+    Color boxColor,
+  ) {
+    final subs = selectedCategory!['subtopics'] as List<String>;
+
+    return LayoutBuilder(
+      key: const ValueKey('subView'),
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 뒤로가기 버튼
+                  IconButton(
+                    onPressed: () => setState(() => selectedCategory = null),
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.pinkAccent,
+                    ),
+                  ),
+
+                  // 헤더
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          "${selectedCategory!['emoji']} ${selectedCategory!['title']}",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "세부 주제를 선택해주세요",
+                          style: TextStyle(fontSize: 16, color: subTextColor),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+
+                  //  세부 항목 리스트
+                  ...subs.map(
+                    (s) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: boxColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            s,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.pinkAccent,
+                            size: 18,
+                          ),
+                          onTap: () => _startSubtopic(s),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
