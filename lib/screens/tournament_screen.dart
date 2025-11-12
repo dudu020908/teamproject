@@ -27,6 +27,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final int? rounds = args?['rounds'] as int?;
     final String roundsText = rounds != null ? ' (${rounds}강)' : '';
+    
 
     // Consumer로 감싸서 다크모드 반영
     return Consumer2<ThemeModeNotifier, TournamentProvider>(
@@ -36,7 +37,13 @@ class _TournamentScreenState extends State<TournamentScreen> {
 
         final currentPair = provider.currentPair;
         final topic = provider.topicTitle; // 현재 주제 이름
-
+        //라벨/진행도/부전승 텍스트 구성
+        final label = provider.roundLabel; 
+        final pairText = provider.roundPairsTotal > 0
+            ? '${provider.currentPairIndexDisplay}/${provider.roundPairsTotal}'
+            : '';
+        final byeHint = provider.byeThisRound ? ' · 부전승 1명 포함' : '';
+        final statusText = '($label${pairText.isNotEmpty ? ' $pairText' : ''}$byeHint)';
         // 우승자 확정 시 결과화면 이동
         if (provider.hasWinner && !_navigatedToWinner) {
           _navigatedToWinner = true; // 중복 방지
@@ -52,7 +59,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: Text('대결 – $topic$roundsText'),
+            title: Text('대결 – $topic $statusText$roundsText'),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -74,7 +81,6 @@ class _TournamentScreenState extends State<TournamentScreen> {
                     )
                   else
                     LayoutBuilder(
-                      // ✅ 수정된 부분
                       builder: (context, constraints) {
                         return SizedBox(
                           height: constraints.maxHeight,
