@@ -40,28 +40,30 @@ class TournamentProvider extends ChangeNotifier {
   int get roundPairsPlayed => _roundPairsPlayed;
   bool get byeThisRound => _byeThisRound;
 
-  int get currentPairIndexDisplay => _roundPairsTotal == 0
-      ? 0
-      : (_roundPairsPlayed + 1).clamp(1, _roundPairsTotal);
+  int get currentPairIndexDisplay {
+    if (_roundPairsTotal == 0) return 0;
+
+    // 이번 라운드에서 이미 확정된 진출 슬롯 수 (부전승 + 승자들)
+    final decided = _nextRound.length;
+
+    // 아직 아무도 안 정해졌으면 1부터 시작
+    if (decided <= 0) return 1;
+
+    return decided.clamp(1, _roundPairsTotal);
+  }
 
   String get roundLabel {
-    final effective = _effectivePlayableCount;
-    final n = _pow2Floor(effective);
-    if (n <= 2) return '결승';
-    return '${n}강';
-  }
+    // 이번 라운드 참가 인원 수 (부전승 포함)
+    var total = _roundEntrants;
 
-  int get _effectivePlayableCount {
-    var n = _currentRound.isNotEmpty ? _currentRound.length : _nextRound.length;
-    if (n < 2) n = 2;
-    if (n.isOdd) n -= 1;
-    return n;
-  }
+    // 혹시 초기 상태 등에서 0이면, 안전하게 보정
+    if (total == 0) {
+      total = _currentRound.length + (_byeThisRound ? 1 : 0);
+    }
 
-  int _pow2Floor(int n) {
-    int p = 1;
-    while ((p << 1) <= n) p <<= 1;
-    return p;
+    if (total <= 1) return ''; // 우승 확정 후 등 라벨 불필요
+    if (total == 2) return '결승';
+    return '${total}강';
   }
 
   void setTopic(String topic, List<Candidate> candidates) {
@@ -85,12 +87,15 @@ class TournamentProvider extends ChangeNotifier {
       final bye = _currentRound.removeAt(_rand.nextInt(_currentRound.length));
       _nextRound.add(bye);
       _byeThisRound = true;
+
+      // 이번 라운드 총 인원 = 대결 인원 + 부전승 1명
       _roundEntrants = _currentRound.length + 1;
     } else {
       _roundEntrants = _currentRound.length;
     }
 
-    _roundPairsTotal = (_currentRound.length / 2).floor();
+    // ✅ 이번 라운드 종료 후 남게 될 인원 수 (ceil)
+    _roundPairsTotal = (_roundEntrants + 1) ~/ 2;
 
     _dealNextPair();
     notifyListeners();
@@ -153,7 +158,9 @@ class TournamentProvider extends ChangeNotifier {
         _roundEntrants = _currentRound.length;
       }
 
-      _roundPairsTotal = (_currentRound.length / 2).floor();
+      // 이번 라운드 총 인원(_roundEntrants)을 기준으로
+      // 종료 후 남을 인원 수(슬롯 수)를 다시 계산
+      _roundPairsTotal = (_roundEntrants + 1) ~/ 2;
     }
 
     // 페어 세팅
