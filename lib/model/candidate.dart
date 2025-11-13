@@ -1,4 +1,13 @@
 class Candidate {
+  // 부전승용 특수 ID (실제 데이터와 겹치지 않게 고정 문자열 사용)
+  static const String byeId = '__bye__';
+
+  static const Candidate byeCandidate = Candidate(
+    id: byeId,
+    title: '부전승입니다. 옆 후보를 선택하세요.',
+    imageUrl: '', // 화면에서 별도 위젯으로 처리할 것이므로 사용하지 않음
+  );
+
   final String id;
   final String title;
   final String imageUrl;
@@ -8,6 +17,8 @@ class Candidate {
     required this.title,
     required this.imageUrl,
   });
+
+  bool get isBye => id == byeId;
 }
 
 List<Candidate> samplesForTopic(String topic) {
