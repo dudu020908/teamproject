@@ -18,10 +18,10 @@ class _WinnerScreenState extends State<WinnerScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _saveResult(); // 위너 정보 로컬 저장
-    }); 
+    });
   }
 
   /// 결과 저장 함수
@@ -37,75 +37,98 @@ class _WinnerScreenState extends State<WinnerScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map?;
     final topic = (args?['topic'] as String?) ?? '주제 없음';
     final winner = args?['winner'] as Candidate?;
 
-    // Consumer로 감싸서 다크모드 즉시 반영
-    return Consumer<ThemeModeNotifier>(
-      builder: (context, themeNotifier, _) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        final textColor = isDark ? Colors.white : Colors.black87;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('결과'),
-            automaticallyImplyLeading: false,
-            backgroundColor: Colors.transparent,
-            foregroundColor: textColor,
-          ),
-          body: GradientBackground(
-            child: Stack(
-              children: [
-                Center(
-                  child: winner == null
-                      ? Text('우승자 없음', style: TextStyle(color: textColor))
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '주제: $topic',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: textColor,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            PickCard(
-                              title: winner.title,
-                              imageUrl: winner.imageUrl,
-                              onTap: () {},
-                            ),
-                            const SizedBox(height: 8),
-                            FilledButton(
-                              onPressed: () => Navigator.popUntil(
-                                context,
-                                ModalRoute.withName('/topics'),
-                              ),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: isDark
-                                    ? Colors.blueGrey[700]
-                                    : const Color(0xFF1565C0),
-                              ),
-                              child: const Text(
-                                '다른 주제 선택',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-                // 상단 다크모드 토글 버튼
-                const DarkModeToggle(),
-              ],
-            ),
-          ),
-        );
+    return WillPopScope(
+      onWillPop: () async {
+        // 시스템 뒤로가기 차단 후 직접 이동 처리 
+        Navigator.pushNamedAndRemoveUntil(context, '/topics', (route) => false);
+        return false;
       },
+      child: Consumer<ThemeModeNotifier>(
+        builder: (context, themeNotifier, _) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final textColor = isDark ? Colors.white : Colors.black87;
+
+          return Scaffold(
+            appBar: AppBar(
+              // 자동 뒤로가기 버튼 복구됨 (leading 자동 생성)
+              backgroundColor: Colors.transparent,
+              foregroundColor: textColor,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  // AppBar 뒤로가기 = /topics 이동
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/topics',
+                    (route) => false,
+                  );
+                },
+              ),
+
+              title: const Text('결과'),
+            ),
+            body: GradientBackground(
+              child: Stack(
+                children: [
+                  Center(
+                    child: winner == null
+                        ? Text('우승자 없음', style: TextStyle(color: textColor))
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '주제: $topic',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              PickCard(
+                                title: winner.title,
+                                imageUrl: winner.imageUrl,
+                                onTap: () {},
+                              ),
+                              const SizedBox(height: 8),
+
+                              // 새로운 주제 선택 버튼
+                              FilledButton(
+                                onPressed: () {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    '/topics',
+                                    (route) => false,
+                                  );
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: isDark
+                                      ? Colors.blueGrey[700]
+                                      : const Color(0xFF1565C0),
+                                ),
+                                child: const Text(
+                                  '다른 주제 선택',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+
+                  const DarkModeToggle(),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
