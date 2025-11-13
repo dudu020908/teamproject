@@ -1,0 +1,51 @@
+[√] Flutter (Channel stable, 3.35.3, on Microsoft Windows [Version 10.0.26100.4484], locale ko-KR) [203ms]
+    • Flutter version 3.35.3 on channel stable at C:\flutter_windows_3.35.1-stable\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision a402d9a437 (8 weeks ago), 2025-09-03 14:54:31 -0700
+    • Engine revision ddf47dd3ff
+    • Dart version 3.9.2
+    • DevTools version 2.48.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-lldb-debugging
+
+[√] Windows Version (Windows 11 or higher, 24H2, 2009) [1,443ms]
+
+[√] Android toolchain - develop for Android devices (Android SDK version 36.1.0-rc1) [3.1s]
+    • Android SDK at C:\Users\user\AppData\Local\Android\sdk
+    • Emulator version 36.1.9.0 (build_id 13823996) (CL:N/A)
+    • Platform android-36, build-tools 36.1.0-rc1
+    • Java binary at: C:\Program Files\Android\Android Studio\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    • Java version OpenJDK Runtime Environment (build 21.0.6+-13391695-b895.109)
+    • All Android licenses accepted.
+
+[√] Chrome - develop for the web [67ms]
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[√] Visual Studio - develop Windows apps (Visual Studio Community 2022 17.14.7) [66ms]
+    • Visual Studio at C:\Program Files\Microsoft Visual Studio\2022\Community
+    • Visual Studio Community 2022 version 17.14.36221.1
+    • Windows 10 SDK version 10.0.26100.0
+
+[√] Android Studio (version 2025.1.2) [8ms]
+    • Android Studio at C:\Program Files\Android\Android Studio
+    • Flutter plugin can be installed from:
+       https://plugins.jetbrains.com/plugin/9212-flutter
+    • Dart plugin can be installed from:
+       https://plugins.jetbrains.com/plugin/6351-dart
+    • Java version OpenJDK Runtime Environment (build 21.0.6+-13391695-b895.109)
+
+[√] VS Code, 64-bit edition (version 1.103.2) [7ms]
+    • VS Code at C:\Program Files\Microsoft VS Code
+    • Flutter extension version 3.120.0
+
+[√] Connected device (4 available) [300ms]
+    • sdk gphone64 x86 64 (mobile) • emulator-5554 • android-x64    • Android 16 (API 36) (emulator)
+    • Windows (desktop)            • windows       • windows-x64    • Microsoft Windows [Version 10.0.26100.4484]
+    • Chrome (web)                 • chrome        • web-javascript • Google Chrome 141.0.7390.123
+    • Edge (web)                   • edge          • web-javascript • Microsoft Edge 141.0.3537.85
+
+[√] Network resources [388ms]
+    • All expected network resources are available.
+
+• No issues found!
