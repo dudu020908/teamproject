@@ -18,35 +18,35 @@ class TournamentScreen extends StatefulWidget {
 class _TournamentScreenState extends State<TournamentScreen> {
   bool _navigatedToWinner = false;
   bool _isAnimating = false;
-  Candidate? _selected; // Candidate 타입
-  bool _isLeftCardSelected = false; // 선택된 카드가 왼쪽 카드인지 여부
+  Candidate? _selected;
+  bool _isLeftCardSelected = false;
 
   @override
   Widget build(BuildContext context) {
-    // arguments에서 rounds(몇 강) 정보 받아오기
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final int? rounds = args?['rounds'] as int?;
     final String roundsText = rounds != null ? ' (${rounds}강)' : '';
-    
 
-    // Consumer로 감싸서 다크모드 반영
     return Consumer2<ThemeModeNotifier, TournamentProvider>(
       builder: (context, themeNotifier, provider, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final textColor = isDark ? Colors.white : Colors.black;
 
         final currentPair = provider.currentPair;
-        final topic = provider.topicTitle; // 현재 주제 이름
-        //라벨/진행도/부전승 텍스트 구성
-        final label = provider.roundLabel; 
+        final topic = provider.topicTitle;
+
+        // UI에 쓸 라벨
+        final label = provider.roundLabel;
         final pairText = provider.roundPairsTotal > 0
             ? '${provider.currentPairIndexDisplay}/${provider.roundPairsTotal}'
             : '';
         final byeHint = provider.byeThisRound ? ' · 부전승 1명 포함' : '';
-        final statusText = '($label${pairText.isNotEmpty ? ' $pairText' : ''}$byeHint)';
-        // 우승자 확정 시 결과화면 이동
+        final statusText =
+            '($label${pairText.isNotEmpty ? ' $pairText' : ''}$byeHint)';
+
+        // 우승 후 결과 이동
         if (provider.hasWinner && !_navigatedToWinner) {
-          _navigatedToWinner = true; // 중복 방지
+          _navigatedToWinner = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushNamed(
               context,
@@ -59,12 +59,32 @@ class _TournamentScreenState extends State<TournamentScreen> {
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: Text('대결 – $topic $statusText$roundsText'),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
             foregroundColor: textColor,
+
+            // 2줄 제목 적용
+            title: Column(
+              children: [
+                Text(
+                  '대결 – $topic',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '$statusText$roundsText',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: textColor.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
           ),
+
           body: GradientBackground(
             child: SizedBox.expand(
               child: Stack(
@@ -88,12 +108,10 @@ class _TournamentScreenState extends State<TournamentScreen> {
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              // 두 카드 (AnimatedSwitcher로 전환)
                               AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 600),
                                 transitionBuilder: (child, anim) =>
                                     ScaleTransition(
-                                      // 다음 라운드 카드가 튀어나오는 애니메이션
                                       scale: CurvedAnimation(
                                         parent: anim,
                                         curve: Curves.elasticOut,
@@ -106,7 +124,6 @@ class _TournamentScreenState extends State<TournamentScreen> {
                                       )
                                     : Row(
                                         key: ValueKey(
-                                          // AnimatedSwitcher가 다음 라운드로 전환되게 하는 Key
                                           currentPair
                                               .map((c) => c.title)
                                               .join(','),
@@ -114,10 +131,8 @@ class _TournamentScreenState extends State<TournamentScreen> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: currentPair.map((candidate) {
-                                          // 선택되지 않은 카드는 사라지도록 처리
                                           return Expanded(
                                             child: AnimatedScale(
-                                              // 선택된 카드를 살짝 축소시켜서 강조하는 효과
                                               scale: _selected == candidate
                                                   ? 0.95
                                                   : 1.0,
@@ -139,14 +154,12 @@ class _TournamentScreenState extends State<TournamentScreen> {
                                         }).toList(),
                                       ),
                               ),
-                              // 선택된 카드 애니메이터
+
                               if (_selected != null && _isAnimating)
                                 PickWinnerAnimator(
                                   candidate: _selected!,
-                                  // isLeftCard 정보 전달
                                   isLeftCard: _isLeftCardSelected,
                                   onAnimationComplete: () {
-                                    // 애니메이션이 끝나면 다음 라운드로 넘어가기 위한 로직 실행
                                     provider.pickWinner(_selected!);
 
                                     Future.delayed(
@@ -167,7 +180,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                         );
                       },
                     ),
-                  // 상단 다크모드 토글 버튼
+
                   const DarkModeToggle(),
                 ],
               ),
@@ -185,13 +198,12 @@ class _TournamentScreenState extends State<TournamentScreen> {
     if (_isAnimating) return;
 
     final currentPair = provider.currentPair;
-    // 선택된 카드가 currentPair의 첫 번째 요소(왼쪽)인지 확인
     final isLeft = currentPair.isNotEmpty && currentPair[0] == candidate;
 
     setState(() {
       _selected = candidate;
       _isAnimating = true;
-      _isLeftCardSelected = isLeft; // 상태 저장
+      _isLeftCardSelected = isLeft;
     });
   }
 }
