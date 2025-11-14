@@ -211,27 +211,40 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                               vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
+                                              gradient: isDark
+                                               ? null // 다크모드일 때는 단색
+                                               : const LinearGradient(
                                                 colors: [
                                                   Colors.pinkAccent,
                                                   Colors.purpleAccent,
                                                 ],
                                               ),
+                                              color: isDark
+                                                  ? Colors.grey[800]
+                                                  : null, // 회색 배경 적용
                                               borderRadius:
                                                   BorderRadius.circular(24),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.purpleAccent
-                                                      .withOpacity(0.4),
-                                                  blurRadius: 10,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
+                                              boxShadow: isDark
+                                                  ? [] // 다크모드 → 그림자 없음
+                                                  : [
+                                                      BoxShadow(
+                                                        color: Colors
+                                                            .purpleAccent
+                                                            .withOpacity(0.4),
+                                                        blurRadius: 10,
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
+                                                        ),
+                                                      ),
+                                                    ],
                                             ),
                                             child: Text(
                                               "${age.toInt()}세",
-                                              style: const TextStyle(
-                                                color: Colors.black, //색바꿈
+                                              style: TextStyle(
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : Colors.black, // 글자색 반전
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
