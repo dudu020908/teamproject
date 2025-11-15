@@ -48,6 +48,8 @@ pubspec.lock
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+android/app/google-services.json
+.env
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
@@ -90,4 +92,5 @@ pubspec.lock
 **/linux/flutter/generated_plugin_registrant.cc
 **/linux/flutter/generated_plugin_registrant.h
 **/linux/flutter/generated_plugins.cmake
-android/app/google-services.json
+
+
