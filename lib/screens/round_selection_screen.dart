@@ -4,17 +4,33 @@ import 'package:provider/provider.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/model/candidate.dart';
+import 'package:teamproject/widgets/logout_button.dart';
 import '../providers/tournament_provider.dart';
 import 'package:teamproject/main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Firestore에서 후보자 목록을 가져오는 함수
+Future<List<Candidate>> fetchCandidates(String worldcupId) async {
+  final snapshot = await FirebaseFirestore.instance
+      .collection('worldcups')
+      .doc(worldcupId)
+      .collection('candidates')
+      .get();
+
+  return snapshot.docs.map((doc) => Candidate.fromFirestore(doc)).toList();
+}
 
 class RoundSelectionScreen extends StatefulWidget {
   final String categoryTitle;
   final String categoryEmoji;
 
+  final String worldcupId;
+
   const RoundSelectionScreen({
     super.key,
     required this.categoryTitle,
     required this.categoryEmoji,
+    required this.worldcupId, // 생성자에 worldcupId 추가
   });
 
   @override
@@ -35,9 +51,9 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
         SnackBar(
           content: Text(
             message,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.white,
+              color: Colors.white,
             ),
           ),
           backgroundColor: isDark ? Colors.redAccent[700] : Colors.redAccent,
@@ -47,32 +63,29 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
       );
   }
 
-  // "시작하기" 버튼 클릭 시
-  void _handleStart(bool isDark) {
+  // topic 기반 후보 로딩 → worldcupId 기반으로 변경
+  void _handleStart(bool isDark) async {
     final text = _controller.text.trim();
     final num = int.tryParse(text);
 
-    // 숫자가 아니거나 범위 초과 시 경고
     if (num == null || num < 8 || num > 128) {
       _showSnackBar("⚠️ 8~128 사이의 숫자만 입력 가능합니다", isDark);
       return;
     }
-    // Provider 초기화,데이터 전달
-    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final topic = args?['topic'] ?? widget.categoryTitle;
 
-    final provider = Provider.of<TournamentProvider>(context, listen: false);
-    final candidates = samplesForTopic(topic);
+    // worldcupId 기준으로 Firestore 후보 조회
+    final candidates = await fetchCandidates(widget.worldcupId);
 
-    // ✅ 후보가 부족한 경우 차단
+    // 후보 수 부족
     if (candidates.length < num) {
       _showSnackBar(
         "⚠️ 후보 수(${candidates.length}명)가 ${num}강을 진행하기에 부족합니다!",
         isDark,
       );
-      return; // 시작 안 함
+      return;
     }
 
+    // 후보 섞기
     List<Candidate> selectedCandidates = List.from(candidates);
     selectedCandidates.shuffle();
 
@@ -80,8 +93,13 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
       selectedCandidates = selectedCandidates.take(num).toList();
     }
 
-    provider.startTournament(topic, selectedCandidates);
+    // Provider에 설정
+    Provider.of<TournamentProvider>(
+      context,
+      listen: false,
+    ).startTournament(widget.categoryTitle, selectedCandidates);
 
+    // 화면 이동
     Navigator.pushNamed(context, '/tournament', arguments: {'rounds': num});
   }
 
@@ -94,10 +112,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
         final subTextColor = isDark ? Colors.grey[400] : Colors.grey[700];
         final boxColor = isDark ? Colors.grey[850] : Colors.white;
 
-        final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final topic = args?['topic'] ?? widget.categoryTitle;
-        final emoji = args?['emoji'] ?? widget.categoryEmoji;
-
+        // topic, emoji 는 arguments 에서 받지 않음 → 모두 widget 값 사용
         final inputValue = int.tryParse(_controller.text) ?? 0;
         final isValid = inputValue >= 8 && inputValue <= 128;
 
@@ -145,12 +160,12 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      emoji,
+                                      widget.categoryEmoji,
                                       style: const TextStyle(fontSize: 20),
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      topic,
+                                      widget.categoryTitle,
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: textColor,
@@ -159,6 +174,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                   ],
                                 ),
                               ),
+
                               const SizedBox(height: 24),
 
                               Text(
@@ -177,7 +193,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
 
                               const SizedBox(height: 32),
 
-                              // 입력 필드
                               Container(
                                 padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
@@ -229,7 +244,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                             border: InputBorder.none,
                                           ),
                                           onChanged: (val) {
-                                            // 숫자 외 문자 입력 시 자동 제거
                                             if (val.isNotEmpty &&
                                                 !RegExp(
                                                   r'^\d+$',
@@ -244,7 +258,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                               );
                                             }
 
-                                            // 128 초과 시 경고
                                             final num = int.tryParse(val);
                                             if (num != null && num > 128) {
                                               _showSnackBar(
@@ -270,7 +283,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
 
                               const SizedBox(height: 24),
 
-                              // 빠른 선택 버튼
                               Text(
                                 "빠른 선택",
                                 style: TextStyle(color: subTextColor),
@@ -301,7 +313,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
 
                               const SizedBox(height: 40),
 
-                              /// 버튼 영역
                               Row(
                                 children: [
                                   Expanded(
@@ -323,7 +334,8 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                           ? Colors.white
                                           : Colors.grey.shade500,
                                       onPressed: isValid
-                                          ? () => _handleStart(isDark)
+                                          ? () =>
+                                                _handleStart(isDark)
                                           : null,
                                     ),
                                   ),
@@ -341,8 +353,8 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                       );
                     },
                   ),
-
-                  //  다크모드 토글 버튼
+                  
+                  const LogoutButton(),
                   const DarkModeToggle(),
                 ],
               ),
