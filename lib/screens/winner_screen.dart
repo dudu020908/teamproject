@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:teamproject/model/candidate.dart';
 import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
-import 'package:teamproject/widgets/pick_winner_card.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
+import 'package:teamproject/widgets/logout_button.dart';
+import 'package:teamproject/widgets/pick_winner_card.dart';
 import 'package:teamproject/main.dart';
 
 class WinnerScreen extends StatefulWidget {
@@ -15,55 +16,61 @@ class WinnerScreen extends StatefulWidget {
 }
 
 class _WinnerScreenState extends State<WinnerScreen> {
+  bool _saved = false; // 로컬 저장 중복 방지
+
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _saveResult(); // 위너 정보 로컬 저장
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _saveLocalResult());
   }
 
-  /// 결과 저장 함수
-  Future<void> _saveResult() async {
-    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    if (args != null) {
-      final topic = args['topic'] as String?;
-      final winner = args['winner'] as Candidate?;
-      if (topic != null && winner != null) {
-        await LocalStorageService.saveResult(topic, winner.title);
-        print('로컬 저장 완료: topic=$topic, winner=${winner.title}');
-      }
-    }
+  // -------------------------------------------------------------------------
+  // 로컬 저장: SharedPreferences(LocalStorageService)
+  // -------------------------------------------------------------------------
+  Future<void> _saveLocalResult() async {
+    if (_saved) return;
+
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+
+    final topic = args['topic'] as String;
+    final winner = args['winner'] as Candidate;
+
+    await LocalStorageService.saveResult(topic, winner.title);
+
+    setState(() => _saved = true);
   }
 
+  // -------------------------------------------------------------------------
+  // UI
+  // -------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map?;
-    final topic = (args?['topic'] as String?) ?? '주제 없음';
-    final winner = args?['winner'] as Candidate?;
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    final topic = args['topic'] as String;
+    final winner = args['winner'] as Candidate;
 
     return WillPopScope(
+      // 뒤로가기 강제 차단 + /topics 이동
       onWillPop: () async {
-        // 시스템 뒤로가기 차단 후 직접 이동 처리 
         Navigator.pushNamedAndRemoveUntil(context, '/topics', (route) => false);
         return false;
       },
+
       child: Consumer<ThemeModeNotifier>(
-        builder: (context, themeNotifier, _) {
+        builder: (_, tm, __) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
-          final textColor = isDark ? Colors.white : Colors.black87;
 
           return Scaffold(
+            extendBodyBehindAppBar: true,
             appBar: AppBar(
-              // 자동 뒤로가기 버튼 복구됨 (leading 자동 생성)
               backgroundColor: Colors.transparent,
-              foregroundColor: textColor,
               elevation: 0,
+              title: const Text("최종 결과"),
+              centerTitle: true,
+
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
                 onPressed: () {
-                  // AppBar 뒤로가기 = /topics 이동
                   Navigator.pushNamedAndRemoveUntil(
                     context,
                     '/topics',
@@ -71,58 +78,94 @@ class _WinnerScreenState extends State<WinnerScreen> {
                   );
                 },
               ),
-
-              title: const Text('결과'),
             ),
+
             body: GradientBackground(
               child: Stack(
                 children: [
-                  Center(
-                    child: winner == null
-                        ? Text('우승자 없음', style: TextStyle(color: textColor))
-                        : Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '주제: $topic',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: textColor,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              PickCard(
-                                title: winner.title,
-                                imageUrl: winner.imageUrl,
-                                onTap: () {},
-                              ),
-                              const SizedBox(height: 8),
-
-                              // 새로운 주제 선택 버튼
-                              FilledButton(
-                                onPressed: () {
-                                  Navigator.pushNamedAndRemoveUntil(
-                                    context,
-                                    '/topics',
-                                    (route) => false,
-                                  );
-                                },
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: isDark
-                                      ? Colors.blueGrey[700]
-                                      : const Color(0xFF1565C0),
-                                ),
-                                child: const Text(
-                                  '다른 주제 선택',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-
+                  const LogoutButton(),
                   const DarkModeToggle(),
+
+                  SafeArea(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 32,
+                      ),
+
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 20),
+
+                          // 🔥 주제 텍스트
+                          Text(
+                            "주제: $topic",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Winner 카드 - 자동 너비 조절
+                          FractionallySizedBox(
+                            widthFactor: 0.85,
+                            child: PickCard(
+                              title: winner.title,
+                              imageUrl: winner.imageUrl,
+                              onTap: () {},
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          Text(
+                            "나의 최종 선택!",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // 요약 보기
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/summary');
+                              },
+                              child: const Text("요약 보기"),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // 다시 하기 → topics 이동
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/topics',
+                                  (route) => false,
+                                );
+                              },
+                              child: const Text("다시 하기"),
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

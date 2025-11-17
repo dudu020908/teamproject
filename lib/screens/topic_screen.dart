@@ -1,211 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/main.dart';
+import 'package:teamproject/service/local_storage_service.dart';
+import 'package:teamproject/widgets/logout_button.dart';
 
-class TopicScreen extends StatefulWidget {
+class TopicScreen extends StatelessWidget {
   const TopicScreen({super.key});
 
-  @override
-  State<TopicScreen> createState() => _TopicScreenState();
-}
-
-class _TopicScreenState extends State<TopicScreen> {
-  Map<String, dynamic>? selectedCategory; // 현재 선택된 큰 카테고리
-  String? selectedSub; // 선택된 세부 항목
-
-  final List<Map<String, dynamic>> categories = [
-    {
-      'title': '연예인 이상형',
-      'emoji': '💘',
-      'image':
-          'https://images.unsplash.com/photo-1740459057005-65f000db582f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-      'subtopics': ['아이돌', '배우', '가수', '예능인'],
-    },
-    {
-      'title': '패션 스타일',
-      'emoji': '👗',
-      'image':
-          'https://images.unsplash.com/photo-1567523680125-43c5dae7e2fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-      'subtopics': ['스트릿', '캐주얼', '빈티지', '하이패션'],
-    },
-    {
-      'title': '식사 궁합',
-      'emoji': '🍖',
-      'image':
-          'https://images.unsplash.com/photo-1736604522360-608c09900076?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-      'subtopics': ['한식', '양식', '일식', '분식'],
-    },
-    {
-      'title': '반려동물',
-      'emoji': '🐶',
-      'image':
-          'https://images.unsplash.com/photo-1519134991647-f069322dfe22?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-      'subtopics': ['강아지', '고양이', '토끼', '햄스터'],
-    },
-    {
-      'title': '감정 스타일',
-      'emoji': '🎨',
-      'image':
-          'https://images.unsplash.com/photo-1699568542323-ff98aca8ea6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-      'subtopics': ['낭만적', '감성적', '유머러스', '차분함'],
-    },
-    {
-      'title': '카페 메뉴',
-      'emoji': '☕',
-      'image':
-          'https://images.unsplash.com/photo-1613187984497-483b0d1df052?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-      'subtopics': ['커피', '디저트', '브런치'],
-    },
-  ];
-
-  void _startSubtopic(String subtopic) {
-    Navigator.pushNamed(
-      context,
-      '/roundselection',
-      arguments: {'topic': subtopic, 'emoji': selectedCategory!['emoji']},
-    );
-  }
+  Stream<QuerySnapshot> get categoriesStream =>
+      FirebaseFirestore.instance.collection("categories").snapshots();
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeModeNotifier>(
       builder: (context, themeNotifier, _) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final textColor = isDark ? Colors.white : Colors.black87;
-        final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
-        final boxColor = isDark ? Colors.grey[850]! : Colors.white;
 
         return Scaffold(
-          backgroundColor: Colors.transparent,
           body: GradientBackground(
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  // 전체 컨텐츠 스위치
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 350),
-                    child: selectedCategory == null
-                        ? _buildMainCategoryView(
-                            textColor,
-                            subTextColor,
-                            boxColor,
-                          )
-                        : _buildSubtopicView(textColor, subTextColor, boxColor),
-                  ),
+            child: Stack(
+              children: [
+                // 카테고리 목록 전체 레이아웃
+                _buildCategoryList(context, isDark),
 
-                  // 다크모드 토글
-                  const DarkModeToggle(),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+                const LogoutButton(), // 좌상단 로그아웃 버튼
+                const DarkModeToggle(), // 우상단 다크모드 버튼
 
-  // 메인 카테고리
-  Widget _buildMainCategoryView(
-    Color textColor,
-    Color? subTextColor,
-    Color boxColor,
-  ) {
-    return LayoutBuilder(
-      key: const ValueKey('mainView'),
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: SizedBox(
-              height: constraints.maxHeight,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Text(
-                    "어떤 월드컵을 해볼까요?",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "원하는 카테고리를 선택해주세요",
-                    style: TextStyle(fontSize: 16, color: subTextColor),
-                  ),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1,
-                          ),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final category = categories[index];
-                        return GestureDetector(
-                          onTap: () =>
-                              setState(() => selectedCategory = category),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Image.network(
-                                  category['image'],
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.black.withOpacity(0.6),
-                                      Colors.transparent,
-                                    ],
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                  ),
-                                ),
-                              ),
-                              Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      category['emoji'],
-                                      style: const TextStyle(fontSize: 36),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      category['title'],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                // 화면 맨 아래 월드컵 생성하기 버튼
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  bottom: 30,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text(
+                        "월드컵 생성하기",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF5C8D),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          "/createworldcup",
+                          arguments: null,
                         );
                       },
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -213,100 +71,135 @@ class _TopicScreenState extends State<TopicScreen> {
     );
   }
 
-  // 세부 주제 화면
-  Widget _buildSubtopicView(
-    Color textColor,
-    Color? subTextColor,
-    Color boxColor,
-  ) {
-    final subs = selectedCategory!['subtopics'] as List<String>;
+  // 카테고리 목록 UI
+  Widget _buildCategoryList(BuildContext context, bool isDark) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: categoriesStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.pinkAccent),
+          );
+        }
 
-    return LayoutBuilder(
-      key: const ValueKey('subView'),
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+        final docs = snapshot.data!.docs;
+
+        if (docs.isEmpty) {
+          return const Center(
+            child: Text("등록된 카테고리가 없습니다.", style: TextStyle(fontSize: 18)),
+          );
+        }
+
+        return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: IntrinsicHeight(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 뒤로가기 버튼
-                  IconButton(
-                    onPressed: () => setState(() => selectedCategory = null),
-                    icon: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.pinkAccent,
-                    ),
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 60),
 
-                  // 헤더
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          "${selectedCategory!['emoji']} ${selectedCategory!['title']}",
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "세부 주제를 선택해주세요",
-                          style: TextStyle(fontSize: 16, color: subTextColor),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-
-                  //  세부 항목 리스트
-                  ...subs.map(
-                    (s) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          color: boxColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            s,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: textColor,
-                            ),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            color: Colors.pinkAccent,
-                            size: 18,
-                          ),
-                          onTap: () => _startSubtopic(s),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const Spacer(),
-                ],
+              Text(
+                "어떤 월드컵을 해볼까요?",
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
-            ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                "원하는 카테고리를 선택해주세요",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              Expanded(
+                child: GridView.builder(
+                  itemCount: docs.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final data = docs[index].data() as Map<String, dynamic>;
+                    final docId = docs[index].id;
+
+                    return _buildCategoryTile(
+                      context,
+                      categoryId: docId,
+                      title: data["title"],
+                      emoji: data["emoji"],
+                      imageUrl: data["imageUrl"],
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  // 카테고리 타일 UI
+  Widget _buildCategoryTile(
+    BuildContext context, {
+    required String categoryId,
+    required String title,
+    required String emoji,
+    required String imageUrl,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          "/category_worldcups",
+          arguments: {"categoryId": categoryId, "title": title, "emoji": emoji},
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(imageUrl, fit: BoxFit.cover),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.black.withOpacity(0.55), Colors.transparent],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 36)),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

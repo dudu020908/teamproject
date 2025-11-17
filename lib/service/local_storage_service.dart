@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageService {
-  // 유저 정보 저장
+  // 유저 정보 저장 (성별, 나이)
   static Future<void> saveUserInfo(String gender, int age) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('gender', gender);
@@ -23,11 +23,29 @@ class LocalStorageService {
     return null;
   }
 
-  // 결과 저장
+  // 유저 정보 존재 여부 확인
+  static Future<bool> hasUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('gender') && prefs.containsKey('age');
+  }
+
+  // 로그아웃: 유저 정보만 삭제
+  static Future<void> clearUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('gender');
+    await prefs.remove('age');
+
+    print('유저 정보 삭제 완료 (로그아웃)');
+  }
+
+  // ---------------------------------------------------------------------------
+  // 월드컵 결과 저장
+  // ---------------------------------------------------------------------------
   static Future<void> saveResult(String topic, String winner) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('topic', topic);
     await prefs.setString('winner', winner);
+
     print('저장된 결과: {topic: $topic, winner: $winner}');
   }
 
@@ -44,7 +62,9 @@ class LocalStorageService {
     return null;
   }
 
-  // 전체 초기화 (테스트용)
+  // ---------------------------------------------------------------------------
+  // 전체 초기화 (테스트 시 사용)
+  // ---------------------------------------------------------------------------
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
