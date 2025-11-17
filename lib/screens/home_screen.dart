@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:teamproject/screens/user_info_screen.dart';
+import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 
@@ -57,6 +58,19 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  // 시작하기 버튼 로직
+  // 로컬에 유저 정보가 있으면 → /topics
+  // 없으면 → /userinfo
+  Future<void> _start() async {
+    final hasInfo = await LocalStorageService.hasUserInfo();
+
+    if (hasInfo) {
+      Navigator.pushReplacementNamed(context, '/topics');
+    } else {
+      Navigator.pushReplacementNamed(context, '/userinfo');
+    }
   }
 
   // 페이드 전환용 함수 user_info_screen으로 넘어가는 애니메이션 효과
@@ -153,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen>
                       scale: _scaleAnim2,
                       child: ElevatedButton(
                         onPressed: () {
-                          _navigateWithFade(context, const UserInfoScreen());
+                          _start();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark

@@ -36,7 +36,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   void _next() async {
     if (gender != null) {
       await LocalStorageService.saveUserInfo(gender!, age.toInt()); // 로컬 저장
-      Navigator.pushNamed(
+      Navigator.pushReplacementNamed(
         context,
         '/topics',
         arguments: {'gender': gender, 'age': age.toInt()},
