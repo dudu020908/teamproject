@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
@@ -56,8 +56,16 @@ class _SummaryScreenState extends State<SummaryScreen> {
           body: GradientBackground(
             child: Stack(
               children: [
-                const DarkModeToggle(), // 상단 우측 토글
-                const LogoutButton(), // 상단 좌측 로그아웃 버튼
+               const Positioned(
+                top: 16,
+                left: 16,
+                child: LogoutButton(),
+              ),
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: DarkModeToggle(),
+              ), // 상단 좌측 로그아웃 버튼
 
                 // 본문 UI
                 Center(
@@ -221,3 +229,4 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
   }
 }
+*/

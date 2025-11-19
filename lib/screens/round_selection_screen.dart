@@ -353,8 +353,16 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                     },
                   ),
 
-                  const LogoutButton(),
-                  const DarkModeToggle(),
+                const Positioned(
+                top: 16,
+                left: 16,
+                child: LogoutButton(),
+              ),
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: DarkModeToggle(),
+              ),
                 ],
               ),
             ),

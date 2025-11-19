@@ -14,16 +14,12 @@ class LogoutButton extends StatelessWidget {
             ? Colors.white70
             : Colors.black87);
 
-    return Positioned(
-      top: 16,
-      left: 16, 
-      child: IconButton(
+    return IconButton(
         icon: Icon(Icons.logout, size: 28, color: iconColor),
         onPressed: () async {
           await LocalStorageService.clearUserInfo();
           Navigator.pushReplacementNamed(context, '/userinfo');
         },
-      ),
     );
   }
 }
