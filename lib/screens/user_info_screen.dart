@@ -336,10 +336,13 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                           ),
                         ),
                       ),
-
                       // 토글은 가장 마지막
                       // 상단 다크모드 토글 버튼
-                      const DarkModeToggle(),
+                       const Positioned(
+                        top: 16,
+                        right: 16,
+                        child: DarkModeToggle(),
+                      ),
                     ],
                   );
                 },

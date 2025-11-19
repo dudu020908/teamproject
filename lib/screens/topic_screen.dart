@@ -35,7 +35,9 @@ class TopicScreen extends StatelessWidget {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [LogoutButton(), DarkModeToggle()],
+                  children: const [
+                    Positioned(top: 16,left: 16,child: LogoutButton(),),
+                  Positioned(top: 16, right: 16, child:  DarkModeToggle(),) ],
                 ),
               ),
 

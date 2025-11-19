@@ -83,13 +83,15 @@ class IdealWorldcupApp extends StatelessWidget {
 
             '/tournament': (_) => const TournamentScreen(),
             '/winner': (_) => const WinnerScreen(),
-            '/summary': (_) => const SummaryScreen(),
+          //  '/summary': (_) => const SummaryScreen(),
           },
         );
       },
     );
   }
 }
+
+
 
 class ThemeModeNotifier extends ChangeNotifier {
   ThemeMode _mode = ThemeMode.system;
