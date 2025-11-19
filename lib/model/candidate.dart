@@ -15,10 +15,14 @@ class Candidate {
   final String title; // 후보 이름
   final String imageUrl; // 후보 이미지 URL
 
+  /// 🔹 새로 추가: 후보 타입 리스트 (예: ['귀여움', '지적임', ...])
+  final List<String> types;
+
   const Candidate({
     required this.id,
     required this.title,
     required this.imageUrl,
+    this.types = const [], // 기본값: 빈 리스트
   });
 
   /// 이 후보가 부전승 카드인지 여부
@@ -27,10 +31,15 @@ class Candidate {
   /// Firestore 문서 → Candidate 객체로 변환
   factory Candidate.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
     return Candidate(
       id: doc.id,
       title: data['name'] ?? data['title'] ?? '제목 없음',
       imageUrl: data['imageUrl'] ?? '',
+      // 🔹 Firestore에 'types' 배열이 있으면 읽어오기
+      types: (data['types'] is List)
+          ? (data['types'] as List).map((e) => e.toString()).toList()
+          : const [],
     );
   }
 
@@ -40,13 +49,17 @@ class Candidate {
     required String topic, // 예: '강아지', '고양이', '카페 메뉴' 등
     String? subtopic,
     String? ownerUid,
+    List<String>? typesOverride,
   }) {
+    final effectiveTypes = typesOverride ?? types;
+
     return {
       'title': title,
       'imageUrl': imageUrl,
       'topic': topic,
       if (subtopic != null) 'subtopic': subtopic,
       if (ownerUid != null) 'ownerUid': ownerUid,
+      if (effectiveTypes.isNotEmpty) 'types': effectiveTypes,
     };
   }
 }

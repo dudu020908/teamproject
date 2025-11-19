@@ -18,6 +18,26 @@ class WinnerScreen extends StatefulWidget {
 class _WinnerScreenState extends State<WinnerScreen> {
   bool _saved = false; // 로컬 저장 중복 방지
 
+  static const Map<String, String> typeComments = {
+    "감성형": "오, 감성적인 타입이시네요. 감정과 분위기를 중시하는 스타일!",
+    "이성형": "이성적인 타입이시네요. 늘 합리적으로 판단하는 편인가요?",
+    "현실형": "매우 현실적인 타입! 이상보단 현실을 중시하는 스타일 같아요.",
+    "이상형": "이상형 지향! 머릿속에 그리던 완벽한 이미지가 확실하신가 봐요.",
+    "개성형": "개성 있는 타입! 남들이 뭐라 해도 내 취향은 내가 정한다 🔥",
+    "트렌디형": "트렌디한 선택! 유행에 누구보다 빠른 감각파네요.",
+    "안정형": "안정적인 타입이시군요. 편안함과 안정감을 중요하게 생각하시는 듯!",
+    "자극형": "자극적인 스타일! 강렬한 매력과 임팩트를 좋아하는 타입이에요.",
+  };
+  String _buildTypeComment(Candidate winner) {
+    // winner.types 가 비어있으면 기본 멘트
+    if (winner.types.isEmpty) {
+      return "나만의 취향이 확실하시네요 😎";
+    }
+
+    final mainType = winner.types.first;
+    return typeComments[mainType] ?? "나만의 취향이 확실하시네요 😎 (타입: $mainType)";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +68,8 @@ class _WinnerScreenState extends State<WinnerScreen> {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     final topic = args['topic'] as String;
     final winner = args['winner'] as Candidate;
+
+    final comment = _buildTypeComment(winner);
 
     return WillPopScope(
       // 뒤로가기 강제 차단 + /topics 이동
@@ -120,8 +142,20 @@ class _WinnerScreenState extends State<WinnerScreen> {
                               onTap: () {},
                             ),
                           ),
+                          const SizedBox(height: 16),
 
-                          const SizedBox(height: 32),
+                          //  타입 분석 코멘트
+                          Text(
+                            comment,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
 
                           Text(
                             "나의 최종 선택!",
