@@ -95,7 +95,11 @@ class _HomeScreenState extends State<HomeScreen>
           child: Stack(
             children: [
               // 상단 다크모드 토글 버튼 (공통 위젯)
-              const DarkModeToggle(),
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: DarkModeToggle(),
+              ),
 
               // 메인 콘텐츠
               Center(

@@ -32,6 +32,10 @@ dependencies:
   # 이미지 압축 패키지 추가
   flutter_image_compress: ^2.4.0
 
+  # 텍스트/링크/파일등 공유용 패키지 추가
+  share_plus: ^12.0.1  
+  # 이미지 파일 저장용
+  path_provider: ^2.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

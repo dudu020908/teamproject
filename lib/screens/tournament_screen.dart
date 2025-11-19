@@ -208,11 +208,16 @@ class _TournamentScreenState extends State<TournamentScreen> {
                           ),
                   ),
                 ),
-
-                // 우측 상단 다크모드 토글
-                const DarkModeToggle(),
-                // 좌측 상단 로그아웃 버튼
-                const LogoutButton(),
+              const Positioned(
+                top: 16,
+                left: 16,
+                child: LogoutButton(),
+              ),
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: DarkModeToggle(),
+              ),
               ],
             ),
           ),
