@@ -10,10 +10,7 @@ class DarkModeToggle extends StatelessWidget {
     // 현재 다크모드 여부 감지
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Positioned(
-      top: 16,
-      right: 16,
-      child: IconButton(
+    return IconButton(
         icon: Icon(
           // 다크모드 상태에 따라 아이콘 변경
           isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
@@ -25,7 +22,6 @@ class DarkModeToggle extends StatelessWidget {
           context.read<ThemeModeNotifier>().toggle();
         },
         tooltip: isDark ? "라이트 모드로 전환" : "다크 모드로 전환",
-      ),
-    );
+      );
   }
 }
