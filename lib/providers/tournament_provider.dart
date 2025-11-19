@@ -74,7 +74,6 @@ class TournamentProvider extends ChangeNotifier {
       ? 0
       : (_roundPairsPlayed + 1).clamp(1, _roundPairsTotal);
 
-
   /// 토너먼트 시작
   void startTournament(String topic, List<Candidate> candidates) {
     _topicTitle = topic;
