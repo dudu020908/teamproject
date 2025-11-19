@@ -10,10 +10,10 @@ import 'package:teamproject/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Firestore에서 후보자 목록을 가져오는 함수
-Future<List<Candidate>> fetchCandidates(String worldcupId) async {
+Future<List<Candidate>> fetchCandidates(String categoryId) async {
   final snapshot = await FirebaseFirestore.instance
-      .collection('worldcups')
-      .doc(worldcupId)
+      .collection('categories')
+      .doc(categoryId)
       .collection('candidates')
       .get();
 
@@ -24,13 +24,13 @@ class RoundSelectionScreen extends StatefulWidget {
   final String categoryTitle;
   final String categoryEmoji;
 
-  final String worldcupId;
+  final String categoryId;
 
   const RoundSelectionScreen({
     super.key,
     required this.categoryTitle,
     required this.categoryEmoji,
-    required this.worldcupId, // 생성자에 worldcupId 추가
+    required this.categoryId,
   });
 
   @override
@@ -74,7 +74,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
     }
 
     // worldcupId 기준으로 Firestore 후보 조회
-    final candidates = await fetchCandidates(widget.worldcupId);
+    final candidates = await fetchCandidates(widget.categoryId);
 
     // 후보 수 부족
     if (candidates.length < num) {
@@ -334,8 +334,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                           ? Colors.white
                                           : Colors.grey.shade500,
                                       onPressed: isValid
-                                          ? () =>
-                                                _handleStart(isDark)
+                                          ? () => _handleStart(isDark)
                                           : null,
                                     ),
                                   ),
@@ -353,7 +352,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                       );
                     },
                   ),
-                  
+
                   const LogoutButton(),
                   const DarkModeToggle(),
                 ],

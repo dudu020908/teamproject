@@ -31,7 +31,7 @@ Future<void> main() async {
   }
 
   final userInfo = await LocalStorageService.loadUserInfo();
-  final String initialRoute = userInfo == null ? '/home' : '/topics';
+  final String initialRoute = '/home';
 
   runApp(
     MultiProvider(
@@ -75,9 +75,9 @@ class IdealWorldcupApp extends StatelessWidget {
                   ModalRoute.of(context)!.settings.arguments
                       as Map<String, dynamic>;
               return RoundSelectionScreen(
-                worldcupId: args['worldcupId'],
-                categoryTitle: args['title'], 
-                categoryEmoji: args['emoji'], 
+                categoryId: args['categoryId'],
+                categoryTitle: args['title'],
+                categoryEmoji: args['emoji'],
               );
             },
 
