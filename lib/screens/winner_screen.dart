@@ -46,8 +46,7 @@ class _WinnerScreenState extends State<WinnerScreen> {
     }
 
     final mainType = winner.types.first;
-    return typeComments[mainType] ??
-        "나만의 취향이 확실하시네요 😎 (타입: $mainType)";
+    return typeComments[mainType] ?? "나만의 취향이 확실하시네요 😎 (타입: $mainType)";
   }
 
   @override
@@ -77,8 +76,9 @@ class _WinnerScreenState extends State<WinnerScreen> {
   }) async {
     try {
       // 1) RepaintBoundary로 감싼 영역을 RenderRepaintBoundary로 가져온다.
-      final boundary = _resultCardKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _resultCardKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) {
         debugPrint('RepaintBoundary not found');
         return;
@@ -86,8 +86,7 @@ class _WinnerScreenState extends State<WinnerScreen> {
 
       // 2) 위젯을 이미지로 렌더링
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return;
       final Uint8List pngBytes = byteData.buffer.asUint8List();
 
@@ -97,11 +96,9 @@ class _WinnerScreenState extends State<WinnerScreen> {
       await file.writeAsBytes(pngBytes);
 
       // 4) share_plus로 이미지 + 텍스트 공유
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text:
-            '이상형 월드컵 결과\n\n주제: $topic\n최종 선택: ${winner.title}\n$comment',
-      );
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], text: '이상형 월드컵 결과\n\n주제: $topic\n최종 선택: ${winner.title}\n$comment');
     } catch (e, s) {
       debugPrint('Error capturing and sharing result card: $e\n$s');
     }
@@ -119,11 +116,7 @@ class _WinnerScreenState extends State<WinnerScreen> {
     return WillPopScope(
       // 뒤로가기 강제 차단 + /home 이동
       onWillPop: () async {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/home',
-          (route) => false,
-        );
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         return false;
       },
       child: Consumer<ThemeModeNotifier>(
@@ -154,16 +147,8 @@ class _WinnerScreenState extends State<WinnerScreen> {
             body: GradientBackground(
               child: Stack(
                 children: [
-                  const Positioned(
-                    top: 16,
-                    left: 16,
-                    child: LogoutButton(),
-                  ),
-                  const Positioned(
-                    top: 16,
-                    right: 16,
-                    child: DarkModeToggle(),
-                  ),
+                  const Positioned(top: 16, left: 16, child: LogoutButton()),
+                  const Positioned(top: 16, right: 16, child: DarkModeToggle()),
                   Positioned.fill(
                     top: 60,
                     child: SingleChildScrollView(
@@ -179,64 +164,68 @@ class _WinnerScreenState extends State<WinnerScreen> {
                           //이미지로 캡처 (제목 + 카드 + 코멘트 + 최종 선택)
                           RepaintBoundary(
                             key: _resultCardKey,
-                            child: Container(width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 16),
-                            color: isDark? Colors.black :Colors.white,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // 주제 텍스트
-                                Text(
-                                  "주제: $topic",
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              color: isDark ? Colors.black : Colors.white,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // 주제 텍스트
+                                  Text(
+                                    "주제: $topic",
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
 
-                                const SizedBox(height: 24),
+                                  const SizedBox(height: 24),
 
-                                // Winner 카드 - 자동 너비 조절
-                                FractionallySizedBox(
-                                  widthFactor: 0.85,
-                                  child: PickCard(
-                                    title: winner.title,
-                                    imageUrl: winner.imageUrl,
-                                    onTap: () {},
+                                  // Winner 카드 - 자동 너비 조절
+                                  FractionallySizedBox(
+                                    widthFactor: 0.85,
+                                    child: PickCard(
+                                      title: winner.title,
+                                      imageUrl: winner.imageUrl,
+                                      onTap: () {},
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
+                                  const SizedBox(height: 16),
 
-                                // 타입 분석 코멘트
-                                Text(
-                                  comment,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
+                                  // 타입 분석 코멘트
+                                  Text(
+                                    comment,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
                                   ),
-                                ),
 
-                                const SizedBox(height: 24),
+                                  const SizedBox(height: 24),
 
-                                Text(
-                                  "당신의 최종 선택! : ${winner.title}",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
+                                  Text(
+                                    "당신의 최종 선택! : ${winner.title}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                             ),
                           ),
 

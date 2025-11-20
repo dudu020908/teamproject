@@ -23,8 +23,8 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   final TextEditingController _titleCtl = TextEditingController();
   final TextEditingController _descCtl = TextEditingController();
 
-  /// 선택된 카테고리의 "후보 목록"
-  /// categories/{categoryId}/candidates 의 데이터를 여기로 가져옴
+  // 선택된 카테고리의 "후보 목록"
+  // categories/{categoryId}/candidates 의 데이터를 여기로 가져옴
   final List<Map<String, dynamic>> _candidates = [];
 
   /// 후보 타입 목록
@@ -54,9 +54,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   String? _selectedCategoryTitle;
   String? _selectedCategoryEmoji;
 
-  // =======================================================================
   // 이미지 압축 (카테고리 후보 추가 시 사용)
-  // =======================================================================
   Future<Uint8List> _compressImage(XFile xfile) async {
     if (kIsWeb) {
       return await xfile.readAsBytes();
@@ -72,9 +70,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     return result ?? await File(xfile.path).readAsBytes();
   }
 
-  // =======================================================================
   // 카테고리 선택 BottomSheet
-  // =======================================================================
   void _openCategoryPicker() {
     showModalBottomSheet(
       context: context,
@@ -144,7 +140,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
                               Navigator.pop(context);
 
-                              // 🔥 선택한 카테고리의 후보 로딩
+                              // 선택한 카테고리의 후보 로딩
                               await _loadCategoryCandidates(doc.id);
                             },
                             trailing: Row(
@@ -153,7 +149,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.edit, size: 20),
                                   onPressed: () {
-                                    Navigator.pop(context); // 바텀시트 먼저 닫고
+                                    Navigator.pop(context);
                                     _openEditCategoryDialog(
                                       categoryId: doc.id,
                                       currentTitle: title,
@@ -384,10 +380,8 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     }
   }
 
-  // =======================================================================
   // 선택한 카테고리의 후보 불러오기
   // categories/{categoryId}/candidates
-  // =======================================================================
   Future<void> _loadCategoryCandidates(String categoryId) async {
     try {
       final snap = await FirebaseFirestore.instance
@@ -423,9 +417,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     }
   }
 
-  // =======================================================================
   // 카테고리 생성 Dialog (기존 로직)
-  // =======================================================================
   void _openCreateCategoryDialog() {
     final titleCtl = TextEditingController();
     final emojiCtl = TextEditingController();
@@ -538,9 +530,8 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     );
   }
 
-  // =======================================================================
-  // 🔥 카테고리에 후보 추가 (FAB에서 사용)
-  // =======================================================================
+  // 카테고리에 후보 추가 (FAB에서 사용)
+
   void _openAddCandidateDialog() {
     if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(
@@ -553,6 +544,8 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     XFile? pickedFile;
     final selectedTypes = <String>{};
 
+    String? dialogError;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -563,6 +556,36 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
           ),
           child: StatefulBuilder(
             builder: (context, setStateLocal) {
+              // 현재 상태 기준으로 에러메시지 다시 계산해주는 함수
+              void _updateError() {
+                final missingName = nameCtl.text.trim().isEmpty;
+                final missingType = selectedTypes.length != 1;
+                final missingImage = pickedFile == null;
+
+                String? msg;
+                if (missingName && missingType && missingImage) {
+                  msg = "후보 이름, 타입, 이미지를 모두 입력/선택해주세요.";
+                } else if (missingName && missingType) {
+                  msg = "후보 이름과 타입을 입력/선택해주세요.";
+                } else if (missingName && missingImage) {
+                  msg = "후보 이름과 이미지를 입력/선택해주세요.";
+                } else if (missingType && missingImage) {
+                  msg = "타입과 이미지를 선택해주세요.";
+                } else if (missingName) {
+                  msg = "후보 이름을 입력해주세요.";
+                } else if (missingType) {
+                  msg = "타입을 1개 선택해주세요.";
+                } else if (missingImage) {
+                  msg = "후보 이미지를 선택해주세요.";
+                } else {
+                  msg = null; // 모두 OK
+                }
+
+                setStateLocal(() {
+                  dialogError = msg;
+                });
+              }
+
               return AnimatedPadding(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.only(
@@ -581,11 +604,19 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      // 이름 입력
                       TextField(
                         controller: nameCtl,
                         decoration: const InputDecoration(labelText: "후보 이름"),
+                        onChanged: (_) {
+                          // 입력할 때마다 현재 상태 기준으로 에러 갱신
+                          _updateError();
+                        },
                       ),
                       const SizedBox(height: 16),
+
+                      // 타입 선택
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -609,34 +640,34 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                             onSelected: (value) {
                               setStateLocal(() {
                                 if (value) {
-                                  if (selectedTypes.length < 8) {
-                                    selectedTypes.add(type);
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "타입은 최대 8개까지 선택할 수 있습니다.",
-                                        ),
-                                      ),
-                                    );
-                                  }
+                                  // ❗ 무조건 1개만 선택
+                                  selectedTypes
+                                    ..clear()
+                                    ..add(type);
                                 } else {
                                   selectedTypes.remove(type);
                                 }
+                                _updateError();
                               });
                             },
                           );
                         }).toList(),
                       ),
+
                       const SizedBox(height: 16),
+
+                      // 이미지 선택
                       OutlinedButton(
                         onPressed: () async {
                           final file = await _picker.pickImage(
                             source: ImageSource.gallery,
                           );
                           if (file != null) {
-                            setStateLocal(() => pickedFile = file);
+                            setStateLocal(() {
+                              pickedFile = file;
+                            });
                           }
+                          _updateError(); // 선택 여부에 따라 에러 갱신
                         },
                         child: const Text("갤러리에서 선택"),
                       ),
@@ -657,7 +688,25 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                   fit: BoxFit.cover,
                                 ),
                         ),
-                      const SizedBox(height: 20),
+
+                      const SizedBox(height: 12),
+
+                      // 에러 메시지 (Dialog 안에 표시)
+                      if (dialogError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            dialogError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 8),
+
+                      // 버튼들
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -668,27 +717,17 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                           const SizedBox(width: 8),
                           FilledButton(
                             onPressed: () async {
-                              if (nameCtl.text.trim().isEmpty ||
-                                  pickedFile == null) {
-                                return;
-                              }
-                              if (selectedTypes.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("최소 한 개 타입을 선택하세요."),
-                                  ),
-                                );
-                                return;
-                              }
-                              if (selectedTypes.length > 1) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("타입은 1개만 선택 가능합니다."),
-                                  ),
-                                );
+                              // 추가 버튼 눌렀을 때 최종 검증
+                              final missingName = nameCtl.text.trim().isEmpty;
+                              final missingType = selectedTypes.length != 1;
+                              final missingImage = pickedFile == null;
+
+                              if (missingName || missingType || missingImage) {
+                                _updateError(); // 현재 상태 기준으로 메시지 생성
                                 return;
                               }
 
+                              // 여기 도달했다는 건 세 개 다 OK
                               final categoryId = _selectedCategoryId!;
                               final candRef = FirebaseFirestore.instance
                                   .collection("categories")
@@ -744,9 +783,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     );
   }
 
-  // =======================================================================
   // 월드컵 저장 (worldcups 컬렉션 + candidates 복사)
-  // =======================================================================
   Future<void> _saveWorldcup() async {
     // 1. 제목 체크 없음
     // 2. 카테고리 선택 필수
@@ -808,9 +845,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     );
   }
 
-  // =======================================================================
   // UI
-  // =======================================================================
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -837,7 +872,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 🔹 카테고리 카드
+                // 카테고리 카드
                 _buildCard(
                   child: ListTile(
                     title: const Text("카테고리"),
@@ -856,7 +891,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
                 const SizedBox(height: 16),
 
-                // 🔹 가운데 영역: 후보 없을 때는 빈 상태, 있을 때는 리스트 (스크롤)
+                // 가운데 영역: 후보 없을 때는 빈 상태, 있을 때는 리스트 (스크롤)
                 Expanded(
                   child: _candidates.isEmpty
                       ? Center(child: _emptyCandidatesView())
@@ -880,7 +915,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
                 const SizedBox(height: 24),
 
-                // 🔹 업로드 박스 + 저장 버튼 + 에러 메시지 (하단 고정 느낌)
+                //업로드 박스 + 저장 버튼 + 에러 메시지 (하단 고정 느낌)
                 if (_saving) _buildUploadingBox(),
                 FilledButton(
                   onPressed: _saving ? null : _saveWorldcup,
@@ -909,7 +944,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
         ),
       ),
 
-      // 🔹 후보 추가 FAB
+      //  후보 추가 FAB
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddCandidateDialog,
         child: const Icon(Icons.add),
@@ -917,9 +952,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     );
   }
 
-  // =======================================================================
   // 보조 UI 위젯들
-  // =======================================================================
   Widget _emptyCandidatesView() {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1025,9 +1058,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     );
   }
 
-  // =======================================================================
   // 후보 수정 / 삭제 다이얼로그
-  // =======================================================================
   void _openEditCandidateDialog(Map<String, dynamic> candidate) {
     if (_selectedCategoryId == null) {
       return;
