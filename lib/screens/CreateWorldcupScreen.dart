@@ -10,7 +10,6 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
-import 'package:teamproject/widgets/logout_button.dart';
 
 class CreateWorldcupScreen extends StatefulWidget {
   const CreateWorldcupScreen({super.key});
@@ -673,7 +672,14 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                   pickedFile == null) {
                                 return;
                               }
-
+                              if (selectedTypes.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("최소 한 개 타입을 선택하세요."),
+                                  ),
+                                );
+                                return;
+                              }
                               if (selectedTypes.length > 1) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -763,8 +769,11 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     });
 
     // 월드컵 문서 생성 (제목은 카테고리 이름 사용)
+    final worldcupTitle = _titleCtl.text.trim();
     final wcRef = await FirebaseFirestore.instance.collection("worldcups").add({
-      "title": _selectedCategoryTitle ?? "월드컵",
+      "title": worldcupTitle.isEmpty
+          ? (_selectedCategoryTitle ?? "월드컵")
+          : worldcupTitle,
       "description": _descCtl.text.trim(),
       "createdAt": Timestamp.now(),
       "categoryId": _selectedCategoryId,
@@ -774,18 +783,12 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
       "owner": "local_user",
       "source": "user_created",
     });
-
-    // 카테고리 후보들을 worldcup 후보로 그대로 복사
-    final futures = <Future>[];
-
-    for (final c in _candidates) {
-      futures.add(_copyCandidateToWorldcup(wcRef, c));
-    }
-
-    await Future.wait(futures);
+    final worldcupId = wcRef.id;
 
     if (!mounted) return;
-
+    setState(() {
+      _saving = false;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("${_selectedCategoryTitle ?? '월드컵'} 생성이 완료되었습니다."),
@@ -799,31 +802,10 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
         'categoryId': _selectedCategoryId,
         'title': _selectedCategoryTitle ?? "월드컵",
         'emoji': _selectedCategoryEmoji ?? "🏆",
+        //추 후 확장하게되면 통계용
+        'worldcupId': worldcupId,
       },
     );
-
-    setState(() {
-      _saving = false;
-    });
-  }
-
-  Future<void> _copyCandidateToWorldcup(
-    DocumentReference wcRef,
-    Map<String, dynamic> c,
-  ) async {
-    await wcRef.collection("candidates").add({
-      "name": c["name"],
-      "imageUrl": c["imageUrl"],
-      "createdAt": Timestamp.now(),
-      "types": c["types"] ?? [],
-    });
-
-    _uploadedCount++;
-    setState(() {
-      _uploadProgress = _totalToUpload == 0
-          ? 0
-          : _uploadedCount / _totalToUpload;
-    });
   }
 
   // =======================================================================

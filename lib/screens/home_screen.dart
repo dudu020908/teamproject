@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:teamproject/screens/user_info_screen.dart';
 import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
@@ -73,17 +72,6 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // 페이드 전환용 함수 user_info_screen으로 넘어가는 애니메이션 효과
-  void _navigateWithFade(BuildContext context, Widget page) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 700),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            FadeTransition(opacity: animation, child: page),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -95,11 +83,7 @@ class _HomeScreenState extends State<HomeScreen>
           child: Stack(
             children: [
               // 상단 다크모드 토글 버튼 (공통 위젯)
-              const Positioned(
-                top: 16,
-                right: 16,
-                child: DarkModeToggle(),
-              ),
+              const Positioned(top: 16, right: 16, child: DarkModeToggle()),
 
               // 메인 콘텐츠
               Center(

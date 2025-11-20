@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
-
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/widgets/logout_button.dart';
-import 'package:teamproject/main.dart';
-import 'CreateWorldcupScreen.dart';
 
 class TopicScreen extends StatelessWidget {
   const TopicScreen({super.key});
@@ -36,8 +32,9 @@ class TopicScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
-                    Positioned(top: 16,left: 16,child: LogoutButton(),),
-                  Positioned(top: 16, right: 16, child:  DarkModeToggle(),) ],
+                    Positioned(top: 16, left: 16, child: LogoutButton()),
+                    Positioned(top: 16, right: 16, child: DarkModeToggle()),
+                  ],
                 ),
               ),
 

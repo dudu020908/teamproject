@@ -15,7 +15,6 @@ import 'package:teamproject/screens/topic_screen.dart';
 import 'package:teamproject/screens/round_selection_screen.dart';
 import 'package:teamproject/screens/tournament_screen.dart';
 import 'package:teamproject/screens/winner_screen.dart';
-import 'package:teamproject/screens/summary_screen.dart';
 import 'package:teamproject/screens/home_screen.dart';
 import 'package:teamproject/screens/worldcup_list_screen.dart';
 
@@ -83,15 +82,13 @@ class IdealWorldcupApp extends StatelessWidget {
 
             '/tournament': (_) => const TournamentScreen(),
             '/winner': (_) => const WinnerScreen(),
-          //  '/summary': (_) => const SummaryScreen(),
+            //  '/summary': (_) => const SummaryScreen(),
           },
         );
       },
     );
   }
 }
-
-
 
 class ThemeModeNotifier extends ChangeNotifier {
   ThemeMode _mode = ThemeMode.system;
