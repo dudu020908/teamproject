@@ -834,7 +834,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
     Navigator.pushReplacementNamed(
       context,
-      '/roundselection',
+      '/topics',
       arguments: {
         'categoryId': _selectedCategoryId,
         'title': _selectedCategoryTitle ?? "월드컵",
