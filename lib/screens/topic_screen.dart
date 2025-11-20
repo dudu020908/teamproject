@@ -7,7 +7,7 @@ import 'package:teamproject/widgets/logout_button.dart';
 class TopicScreen extends StatelessWidget {
   const TopicScreen({super.key});
 
-  // 🔹 worldcups 컬렉션 스트림 (isDraft 필드 쓰면 where 로 필터해도 됨)
+  // worldcups 컬렉션 스트림 (isDraft 필드 쓰면 where 로 필터해도 됨)
   Stream<QuerySnapshot> get categoriesStream => FirebaseFirestore.instance
       .collection("categories")
       .orderBy("createdAt", descending: true)
@@ -211,8 +211,7 @@ class _WorldcupCard extends StatelessWidget {
               Container(
                 color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],
               ),
-
-            // 🔹 아래에서 위로 올라가는 어두운 그라디언트
+            //아래에서 위로 올라가는 어두운 그라디언트
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -227,13 +226,13 @@ class _WorldcupCard extends StatelessWidget {
               ),
             ),
 
-            // 🔹 이모지 + 제목
+            // 이모지 + 제목
             Align(
               alignment: const Alignment(0, 0.35),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 🔥 이모지 강조를 위한 반투명 원형 배경
+                  // 이모지 강조를 위한 반투명 원형 배경
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(

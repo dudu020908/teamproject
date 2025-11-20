@@ -5,35 +5,33 @@ import '../model/candidate.dart';
 class TournamentProvider extends ChangeNotifier {
   // 토너먼트 기본 정보
 
-  /// 선택된 카테고리 (예: "강아지", "아이돌", "커피")
   String _topicTitle = '';
   String get topicTitle => _topicTitle;
 
-  /// 현재 라운드에서 실제 대결할 후보 목록
+  //현재 라운드에서 실제 대결할 후보 목록
   List<Candidate> _currentRound = <Candidate>[];
 
-  /// 다음 라운드에 진출할 후보들을 임시 저장해두는 리스트
+  // 다음 라운드에 진출할 후보들을 임시 저장해두는 리스트
   final List<Candidate> _nextRound = <Candidate>[];
 
-  /// 현재 라운드의 페어 index (예: 0→첫번째 페어, 2→두번째 페어)
+  // 현재 라운드의 페어 index (예: 0→첫번째 페어, 2→두번째 페어)
   int _index = 0;
 
-  /// 현재 화면에 표시할 좌·우 후보
+  // 현재 화면에 표시할 좌·우 후보
   Candidate? _left;
   Candidate? _right;
 
   Candidate? get left => _left;
   Candidate? get right => _right;
 
-  /// 최종 우승자
+  // 최종 우승자
   Candidate? _winner;
   Candidate? get winner => _winner;
 
-  /// 우승자 결정 여부
+  // 우승자 결정 여부
   bool get hasWinner => _winner != null;
 
-  /// 현재 페어 반환 (null 제외)
-  /// 예: [CandidateA, CandidateB] 또는 (부전승)
+  // 현재 페어 반환 (null 제외)
   List<Candidate> get currentPair {
     final list = <Candidate>[];
     if (_left != null) list.add(_left!);
@@ -41,40 +39,37 @@ class TournamentProvider extends ChangeNotifier {
     return list;
   }
 
-  /// 랜덤 셔플용
+  // 랜덤 셔플용
   final _rand = Random();
 
   // 라운드 정보
-
-  /// 이번 라운드 "실제 후보 수"
-  /// 9명 → 9, 5명 → 5
   int _roundOriginalCount = 0;
 
-  /// 이번 라운드 전체 경기 수 (홀수 → 부전승 포함 후 계산)
+  // 이번 라운드 전체 경기 수 (홀수 → 부전승 포함 후 계산)
   int _roundPairsTotal = 0;
   int get roundPairsTotal => _roundPairsTotal;
 
-  /// 현재까지 끝난 경기 수
+  // 현재까지 끝난 경기 수
   int _roundPairsPlayed = 0;
   int get roundPairsPlayed => _roundPairsPlayed;
 
-  /// 현재 라운드에 부전승 후보가 포함되었는가?
+  // 현재 라운드에 부전승 후보가 포함되었는가?
   bool _byeThisRound = false;
   bool get byeThisRound => _byeThisRound;
 
-  /// UI용 라벨: "8강", "4강", "결승"
+  // UI용 라벨: "8강", "4강", "결승"
   String get roundLabel {
     if (_roundOriginalCount <= 1) return '';
     if (_roundOriginalCount == 2) return '결승';
     return '${_roundOriginalCount}강';
   }
 
-  /// UI용 라운드 진행 표시: "2/4"
+  // UI용 라운드 진행 표시: "2/4"
   int get currentPairIndexDisplay => _roundPairsTotal == 0
       ? 0
       : (_roundPairsPlayed + 1).clamp(1, _roundPairsTotal);
 
-  /// 토너먼트 시작
+  // 토너먼트 시작
   void startTournament(String topic, List<Candidate> candidates) {
     _topicTitle = topic;
     _winner = null;
@@ -82,7 +77,7 @@ class TournamentProvider extends ChangeNotifier {
     _startNewRound(candidates);
   }
 
-  /// 한 페어에서 승자를 선택
+  // 한 페어에서 승자를 선택
   void pickWinner(Candidate selected) {
     if (_winner != null) return; // 이미 우승자 확정됨
     if (selected.isBye) return; // 부전승 카드는 선택될 수 없음
@@ -93,7 +88,7 @@ class TournamentProvider extends ChangeNotifier {
     _roundPairsPlayed += 1;
     _index += 2;
 
-    // ===== 라운드 종료 여부 확인 =====
+    // 라운드 종료 여부 확인
     if (_roundPairsPlayed >= _roundPairsTotal) {
       // 다음 라운드 진출자가 1명 → 우승
       if (_nextRound.length == 1) {
@@ -111,16 +106,12 @@ class TournamentProvider extends ChangeNotifier {
       return;
     }
 
-    // ===== 아직 라운드 남음 → 다음 페어 생성 =====
+    // 아직 라운드 남음 → 다음 페어 생성
     _setCurrentPairFromIndex();
     notifyListeners();
   }
 
-  // ************************************************************
-  // 내부 Helper 함수
-  // ************************************************************
-
-  /// 새로운 라운드를 준비
+  // 새로운 라운드를 준비
   void _startNewRound(List<Candidate> entrants) {
     // 후보 셔플
     _currentRound = List<Candidate>.from(entrants)..shuffle(_rand);
@@ -158,7 +149,7 @@ class TournamentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// _index 위치 기준으로 좌·우 후보 배치
+  // _index 위치 기준으로 좌·우 후보 배치
   void _setCurrentPairFromIndex() {
     if (_index >= 0 && _index + 1 < _currentRound.length) {
       _left = _currentRound[_index];
