@@ -27,16 +27,8 @@ class WorldcupListScreen extends StatelessWidget {
       body: GradientBackground(
         child: Stack(
           children: [
-              const Positioned(
-                top: 16,
-                left: 16,
-                child: LogoutButton(),
-              ),
-              const Positioned(
-                top: 16,
-                right: 16,
-                child: DarkModeToggle(),
-              ),
+            const Positioned(top: 16, left: 16, child: LogoutButton()),
+            const Positioned(top: 16, right: 16, child: DarkModeToggle()),
             // 월드컵 리스트
             Positioned.fill(
               top: 60,
@@ -95,6 +87,7 @@ class WorldcupListScreen extends StatelessWidget {
                               '/roundselection',
                               arguments: {
                                 'worldcupId': wcId,
+                                'categoryId': categoryId,
                                 'title': wc["title"],
                                 'emoji': wc["categoryEmoji"],
                               },
