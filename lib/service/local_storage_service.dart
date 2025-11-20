@@ -38,9 +38,7 @@ class LocalStorageService {
     print('유저 정보 삭제 완료 (로그아웃)');
   }
 
-  // ---------------------------------------------------------------------------
   // 월드컵 결과 저장
-  // ---------------------------------------------------------------------------
   static Future<void> saveResult(String topic, String winner) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('topic', topic);
@@ -62,9 +60,7 @@ class LocalStorageService {
     return null;
   }
 
-  // ---------------------------------------------------------------------------
   // 전체 초기화 (테스트 시 사용)
-  // ---------------------------------------------------------------------------
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
