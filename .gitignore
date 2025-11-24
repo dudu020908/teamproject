@@ -48,6 +48,8 @@ pubspec.lock
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+**/google-services.json
+**/GoogleService-Info.plist
 android/app/google-services.json
 .env
 
