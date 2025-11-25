@@ -208,16 +208,8 @@ class _TournamentScreenState extends State<TournamentScreen> {
                           ),
                   ),
                 ),
-              const Positioned(
-                top: 16,
-                left: 16,
-                child: LogoutButton(),
-              ),
-              const Positioned(
-                top: 16,
-                right: 16,
-                child: DarkModeToggle(),
-              ),
+                const Positioned(top: 16, left: 16, child: LogoutButton()),
+                const Positioned(top: 16, right: 16, child: DarkModeToggle()),
               ],
             ),
           ),

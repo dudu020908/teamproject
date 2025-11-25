@@ -1,12 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+
+import 'package:crypto/crypto.dart'; // md5 해시
 
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
@@ -41,8 +45,8 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
   bool _saving = false;
   String? errorMsg;
-  String? _selectedCategoryImageUrl;
 
+  String? _selectedCategoryImageUrl;
   double _uploadProgress = 0.0;
   int _uploadedCount = 0;
   int _totalToUpload = 0;
@@ -401,6 +405,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
           "types": (data["types"] is List)
               ? List<String>.from(data["types"])
               : <String>[],
+          "imageHash": data["imageHash"] ?? "",
         });
       }
 
@@ -422,7 +427,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     final titleCtl = TextEditingController();
     final emojiCtl = TextEditingController();
     XFile? pickedImage;
-
     final ImagePicker picker = ImagePicker();
 
     showDialog(
@@ -531,7 +535,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   }
 
   // 카테고리에 후보 추가 (FAB에서 사용)
-
   void _openAddCandidateDialog() {
     if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(
@@ -543,7 +546,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     final nameCtl = TextEditingController();
     XFile? pickedFile;
     final selectedTypes = <String>{};
-
     String? dialogError;
 
     showDialog(
@@ -563,6 +565,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                 final missingImage = pickedFile == null;
 
                 String? msg;
+
                 if (missingName && missingType && missingImage) {
                   msg = "후보 이름, 타입, 이미지를 모두 입력/선택해주세요.";
                 } else if (missingName && missingType) {
@@ -604,7 +607,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       // 이름 입력
                       TextField(
                         controller: nameCtl,
@@ -615,7 +617,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-
                       // 타입 선택
                       Align(
                         alignment: Alignment.centerLeft,
@@ -653,9 +654,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                           );
                         }).toList(),
                       ),
-
                       const SizedBox(height: 16),
-
                       // 이미지 선택
                       OutlinedButton(
                         onPressed: () async {
@@ -688,9 +687,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                   fit: BoxFit.cover,
                                 ),
                         ),
-
                       const SizedBox(height: 12),
-
                       // 에러 메시지 (Dialog 안에 표시)
                       if (dialogError != null)
                         Padding(
@@ -703,9 +700,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                             ),
                           ),
                         ),
-
                       const SizedBox(height: 8),
-
                       // 버튼들
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -717,18 +712,68 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                           const SizedBox(width: 8),
                           FilledButton(
                             onPressed: () async {
-                              // 추가 버튼 눌렀을 때 최종 검증
                               final missingName = nameCtl.text.trim().isEmpty;
                               final missingType = selectedTypes.length != 1;
                               final missingImage = pickedFile == null;
 
                               if (missingName || missingType || missingImage) {
-                                _updateError(); // 현재 상태 기준으로 메시지 생성
+                                _updateError();
                                 return;
                               }
 
-                              // 여기 도달했다는 건 세 개 다 OK
                               final categoryId = _selectedCategoryId!;
+                              final newName = nameCtl.text.trim();
+
+                              // 이미지 압축 + 해시 계산
+                              final bytes = await _compressImage(pickedFile!);
+                              final String newImageHash = md5
+                                  .convert(bytes)
+                                  .toString();
+
+                              // 이름 중복 체크
+                              final bool nameExists = _candidates.any((c) {
+                                final existingName =
+                                    (c["name"] as String?)?.trim() ?? "";
+                                return existingName == newName;
+                              });
+
+                              // 이미지 중복 체크 (imageHash 비교)
+                              final bool imageExists = _candidates.any((c) {
+                                final existingHash =
+                                    (c["imageHash"] as String?) ?? "";
+                                return existingHash.isNotEmpty &&
+                                    existingHash == newImageHash;
+                              });
+
+                              if (nameExists || imageExists) {
+                                final msg = nameExists && imageExists
+                                    ? "이미 같은 이름과 사진이 있습니다."
+                                    : nameExists
+                                    ? "중복된 이름입니다."
+                                    : "중복된 사진입니다.";
+
+                                if (context.mounted) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (dialogContext) {
+                                      return AlertDialog(
+                                        title: const Text("다시 선택해주세용"),
+                                        content: Text(msg),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(dialogContext),
+                                            child: const Text("확인"),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                                return;
+                              }
+
+                              // Storage 업로드 & Firestore 저장
                               final candRef = FirebaseFirestore.instance
                                   .collection("categories")
                                   .doc(categoryId)
@@ -737,32 +782,33 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
                               final candId = candRef.id;
 
-                              // Storage 업로드
-                              final bytes = await _compressImage(pickedFile!);
                               final storagePath =
                                   "categories/$categoryId/candidates/$candId.jpg";
+
                               final storageRef = FirebaseStorage.instance
                                   .ref()
                                   .child(storagePath);
+
                               await storageRef.putData(bytes);
+
                               final url = await storageRef.getDownloadURL();
 
-                              // Firestore 저장
                               await candRef.set({
-                                "name": nameCtl.text.trim(),
+                                "name": newName,
                                 "imageUrl": url,
                                 "imagePath": storagePath,
                                 "createdAt": Timestamp.now(),
                                 "types": selectedTypes.toList(),
+                                "imageHash": newImageHash, // ✅ 해시도 저장
                               });
 
-                              // 로컬 리스트 업데이트
                               setState(() {
                                 _candidates.add({
                                   "id": candId,
-                                  "name": nameCtl.text.trim(),
+                                  "name": newName,
                                   "imageUrl": url,
                                   "types": selectedTypes.toList(),
+                                  "imageHash": newImageHash, // ✅ 로컬에도 저장
                                 });
                               });
 
@@ -807,6 +853,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
     // 월드컵 문서 생성 (제목은 카테고리 이름 사용)
     final worldcupTitle = _titleCtl.text.trim();
+
     final wcRef = await FirebaseFirestore.instance.collection("worldcups").add({
       "title": worldcupTitle.isEmpty
           ? (_selectedCategoryTitle ?? "월드컵")
@@ -820,12 +867,15 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
       "owner": "local_user",
       "source": "user_created",
     });
+
     final worldcupId = wcRef.id;
 
     if (!mounted) return;
+
     setState(() {
       _saving = false;
     });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("${_selectedCategoryTitle ?? '월드컵'} 생성이 완료되었습니다."),
@@ -839,7 +889,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
         'categoryId': _selectedCategoryId,
         'title': _selectedCategoryTitle ?? "월드컵",
         'emoji': _selectedCategoryEmoji ?? "🏆",
-        //추 후 확장하게되면 통계용
+        // 추 후 확장하게되면 통계용
         'worldcupId': worldcupId,
       },
     );
@@ -888,9 +938,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                     onTap: _openCategoryPicker,
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 // 가운데 영역: 후보 없을 때는 빈 상태, 있을 때는 리스트 (스크롤)
                 Expanded(
                   child: _candidates.isEmpty
@@ -912,23 +960,47 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                           ],
                         ),
                 ),
-
                 const SizedBox(height: 24),
-
-                //업로드 박스 + 저장 버튼 + 에러 메시지 (하단 고정 느낌)
+                // 업로드 박스 + 저장 버튼 + 에러 메시지 (하단 고정 느낌)
                 if (_saving) _buildUploadingBox(),
-                FilledButton(
-                  onPressed: _saving ? null : _saveWorldcup,
-                  child: _saving
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.4,
-                          ),
-                        )
-                      : const Text("월드컵 저장"),
+                // 월드컵 저장 + 후보 추가 버튼 한 줄로
+                Row(
+                  children: [
+                    // 왼쪽: 월드컵 저장(가득 채우는 버튼)
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _saving ? null : _saveWorldcup,
+                        child: _saving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.4,
+                                ),
+                              )
+                            : const Text("월드컵 저장"),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // 오른쪽: 후보 추가 + 버튼 (동그란 카드 느낌)
+                    SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: Material(
+                        color: Colors.white,
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: _saving ? null : _openAddCandidateDialog,
+                          child: const Icon(Icons.add, size: 28),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 if (errorMsg != null)
                   Padding(
@@ -942,12 +1014,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
             ),
           ),
         ),
-      ),
-
-      //  후보 추가 FAB
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddCandidateDialog,
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -987,6 +1053,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     final List<String> types = (c["types"] as List?)?.cast<String>() ?? [];
 
     Widget leading;
+
     if (imageUrl.isNotEmpty) {
       leading = ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -1201,6 +1268,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
                               String url = currentImageUrl;
                               String? storagePath;
+
                               if (pickedFile != null) {
                                 final bytes = await _compressImage(pickedFile!);
                                 storagePath =
