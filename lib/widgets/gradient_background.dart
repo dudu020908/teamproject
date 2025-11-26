@@ -7,31 +7,34 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
+
+    // 라이트 모드는 거의 흰색만 사용 (절대 어둡지 않게)
+    final colors = isDark
+        ? <Color>[
+            const Color(0xFF020617), // 아주 어두운 남색 배경
+            const Color(0xFF0F172A), // surface
+            const Color(0xFF111827), // 살짝만 차이
+          ]
+        : <Color>[
+            const Color(0xFFEEDDFF), // 완전 흰색
+            const Color(0xFFDDFBFF), // 아주 옅은 파란빛 흰색
+            const Color(0xFFFFFFFF), // 다시 흰색
+          ];
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 700), // 부드러운 전환
+      duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          // 테마에 따라 자동 색상 전환
-          colors: isDark
-              ? [
-                  const Color(0xFF0D0D0D), // 거의 검정색
-                  const Color(0xFF1E1E1E), // 짙은 회색
-                  const Color(0xFF2C2C2C), // 중간 회색
-                ]
-              : [
-                  const Color(0xFFE3F0FF), // 파스텔 하늘색
-                  const Color(0xFFFDFBFB), // 밝은 흰색
-                  const Color(0xFFFFE4EC), // 연한 핑크
-                ],
-          stops: const [0.1, 0.6, 1.0],
+          colors: colors,
         ),
       ),
-      child: SafeArea(child: child),
+      // SafeArea는 각 화면에서 감싸는 구조 유지
+      child: child,
     );
   }
 }

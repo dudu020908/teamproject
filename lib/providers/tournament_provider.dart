@@ -61,7 +61,7 @@ class TournamentProvider extends ChangeNotifier {
   String get roundLabel {
     if (_roundOriginalCount <= 1) return '';
     if (_roundOriginalCount == 2) return '결승';
-    return '${_roundOriginalCount}강';
+    return '$_roundOriginalCount강';
   }
 
   // UI용 라운드 진행 표시: "2/4"

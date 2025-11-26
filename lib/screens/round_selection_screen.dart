@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/model/candidate.dart';
-import 'package:teamproject/widgets/logout_button.dart';
 import '../providers/tournament_provider.dart';
 import 'package:teamproject/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -425,8 +424,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                       );
                     },
                   ),
-
-                  const Positioned(top: 16, left: 16, child: LogoutButton()),
                   const Positioned(top: 16, right: 16, child: DarkModeToggle()),
                 ],
               ),

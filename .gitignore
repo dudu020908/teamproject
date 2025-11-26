@@ -52,7 +52,8 @@ pubspec.lock
 **/GoogleService-Info.plist
 android/app/google-services.json
 .env
-
+android/key.properties
+android/app/release-keystore.jks
 # iOS/XCode related
 **/ios/**/*.mode1v3
 **/ios/**/*.mode2v3

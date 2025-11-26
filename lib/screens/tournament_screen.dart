@@ -17,9 +17,8 @@ import 'package:provider/provider.dart';
 
 import 'package:teamproject/model/candidate.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
-import 'package:teamproject/widgets/logout_button.dart';
-import 'package:teamproject/widgets/pick_winner_animator.dart';
 import 'package:teamproject/widgets/pick_winner_card.dart';
+import 'package:teamproject/widgets/pick_winner_animator.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/main.dart';
 import '../providers/tournament_provider.dart';
@@ -37,186 +36,162 @@ class _TournamentScreenState extends State<TournamentScreen> {
   Candidate? _selected; // 선택된 후보
   bool _isLeftCardSelected = false; // 선택된 후보가 왼쪽 카드인지 여부
 
-  @override
-  Widget build(BuildContext context) {
-    // RoundSelectionScreen에서 전달된 'rounds' 값 (4/8/16/32)
-    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final int? rounds = args?['rounds'] as int?;
-    final String roundsText = rounds != null ? ' (${rounds}강)' : '';
 
-    return Consumer2<ThemeModeNotifier, TournamentProvider>(
-      builder: (context, themeNotifier, provider, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        final textColor = isDark ? Colors.white : Colors.black;
+@override
+Widget build(BuildContext context) {
+  // 라운드 정보
+  final args = ModalRoute.of(context)?.settings.arguments as Map?;
+  final int? rounds = args?['rounds'] as int?;
+  final String roundsText = rounds != null ? ' ($rounds강)' : '';
 
-        final currentPair = provider.currentPair; // 현재 대결 중인 후보 2명
-        final topic = provider.topicTitle; // 주제(예: 강아지, 아이돌 등)
+  final provider = context.watch<TournamentProvider>();
+  final scheme = Theme.of(context).colorScheme;
+  final textColor = scheme.onSurface;
 
-        // 라운드 / 매치 진행 상황 텍스트
-        final label = provider.roundLabel; // 예: "16강", "8강" ...
-        final pairText = provider.roundPairsTotal > 0
-            ? '${provider.currentPairIndexDisplay}/${provider.roundPairsTotal}'
-            : '';
-        final byeHint = provider.byeThisRound ? ' · 부전승 1명 포함' : '';
-        final statusText =
-            '($label${pairText.isNotEmpty ? ' $pairText' : ''}$byeHint)';
+  final currentPair = provider.currentPair;
+  final topic = provider.topicTitle;
 
-        // 최종 우승자 확정 → WinnerScreen으로 이동
-        if (provider.hasWinner && !_navigatedToWinner) {
-          _navigatedToWinner = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushNamed(
-              context,
-              '/winner',
-              arguments: {'topic': topic, 'winner': provider.winner},
-            );
-          });
-        }
+  final label = provider.roundLabel;
+  final currentIndex = provider.currentPairIndexDisplay;
+  final totalPairs = provider.roundPairsTotal;
+  final pairText = totalPairs > 0 ? '$currentIndex/$totalPairs' : '';
+  final byeHint = provider.byeThisRound ? ' · 부전승 1명 포함' : '';
+  final statusText =
+      '($label${pairText.isNotEmpty ? ' $pairText' : ''}$byeHint)';
 
-        return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            centerTitle: true,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            foregroundColor: textColor,
-          ),
-          body: GradientBackground(
-            child: Stack(
+  // 우승자 확정 → Winner로 이동
+  if (provider.hasWinner && !_navigatedToWinner) {
+    _navigatedToWinner = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.pushNamed(
+        context,
+        '/winner',
+        arguments: {'topic': topic, 'winner': provider.winner},
+      );
+    });
+  }
+
+  return Scaffold(
+    extendBodyBehindAppBar: true,
+    appBar: AppBar(
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      foregroundColor: textColor,
+      actions: const[DarkModeToggle(),SizedBox(width: 4,)],
+    ),
+    body: GradientBackground(
+      child: Stack(
+        children: [
+          // 상단 텍스트
+          Positioned(
+            top: kToolbarHeight + MediaQuery.of(context).padding.top + 5,
+            left: 0,
+            right: 0,
+            child: Column(
               children: [
-                // 상단 중앙: "대결 – 주제" + "(16강 1/8 · 부전승)" 등 상태 표시
-                Positioned(
-                  top: kToolbarHeight + MediaQuery.of(context).padding.top + 5,
-                  left: 0,
-                  right: 0,
-                  child: Column(
-                    children: [
-                      Text(
-                        '대결 – $topic',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$statusText$roundsText',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: textColor.withOpacity(0.8),
-                        ),
-                      ),
-                    ],
+                Text(
+                  '대결 – $topic',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
-
-                // 중앙 카드 영역
-                Padding(
-                  padding: const EdgeInsets.only(top: 120),
-                  child: Center(
-                    child: provider.hasWinner
-                        ? const SizedBox.shrink()
-                        : currentPair.isEmpty
-                        ? Text(
-                            "후보가 없습니다",
-                            style: TextStyle(color: textColor, fontSize: 18),
-                          )
-                        : Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // 현재 매치업(좌/우 카드) 애니메이션 전환
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 600),
-                                transitionBuilder: (child, anim) {
-                                  return ScaleTransition(
-                                    scale: CurvedAnimation(
-                                      parent: anim,
-                                      curve: Curves.elasticOut,
-                                    ),
-                                    child: child,
-                                  );
-                                },
-                                child: _isAnimating
-                                    ? const SizedBox.shrink(
-                                        key: ValueKey('gap'),
-                                      )
-                                    : Row(
-                                        key: ValueKey(
-                                          currentPair
-                                              .map((c) => c.title)
-                                              .join(','),
-                                        ),
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: currentPair.map((candidate) {
-                                          // 부전승 카드라면 안내용 카드 표시
-                                          if (candidate.isBye) {
-                                            return Expanded(
-                                              child: _ByeCard(isDark: isDark),
-                                            );
-                                          }
-
-                                          // 일반 후보 카드
-                                          return Expanded(
-                                            child: AnimatedScale(
-                                              scale: _selected == candidate
-                                                  ? 0.95
-                                                  : 1.0,
-                                              duration: const Duration(
-                                                milliseconds: 150,
-                                              ),
-                                              child: PickCard(
-                                                title: candidate.title,
-                                                imageUrl: candidate.imageUrl,
-                                                onTap: _isAnimating
-                                                    ? () {}
-                                                    : () => _onSelect(
-                                                        provider,
-                                                        candidate,
-                                                      ),
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ),
-                              ),
-
-                              // 카드 선택 후 확대 + 이동 애니메이션 (승자 강조)
-                              if (_selected != null && _isAnimating)
-                                PickWinnerAnimator(
-                                  candidate: _selected!,
-                                  isLeftCard: _isLeftCardSelected,
-                                  onAnimationComplete: () {
-                                    // 애니메이션 끝 → 승자 처리
-                                    provider.pickWinner(_selected!);
-
-                                    Future.delayed(
-                                      const Duration(milliseconds: 200),
-                                      () {
-                                        if (mounted) {
-                                          setState(() {
-                                            _selected = null;
-                                            _isAnimating = false;
-                                          });
-                                        }
-                                      },
-                                    );
-                                  },
-                                ),
-                            ],
-                          ),
+                const SizedBox(height: 4),
+                Text(
+                  '$statusText$roundsText',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: textColor.withValues(alpha: 0.8),
                   ),
                 ),
-                const Positioned(top: 16, left: 16, child: LogoutButton()),
-                const Positioned(top: 16, right: 16, child: DarkModeToggle()),
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+
+          // 카드 영역
+          Padding(
+            padding: const EdgeInsets.only(top: 120),
+            child: Center(
+              child: provider.hasWinner
+                  ? const SizedBox.shrink()
+                  : currentPair.isEmpty
+                      ? Text(
+                          "후보가 없습니다",
+                          style: TextStyle(color: textColor, fontSize: 18),
+                        )
+                      : AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                          child: _isAnimating
+                              ? const SizedBox.shrink(key: ValueKey('gap'))
+                              : Row(
+                                  key: ValueKey(
+                                    currentPair
+                                        .map((c) => c.title)
+                                        .join(','),
+                                  ),
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: currentPair.map((candidate) {
+                                    if (candidate.isBye) {
+                                      return Expanded(
+                                        child: _ByeCard(scheme: scheme),
+                                      );
+                                    }
+
+                                    return Expanded(
+                                      child: AnimatedScale(
+                                        scale: _selected == candidate
+                                            ? 0.95
+                                            : 1.0,
+                                        duration: const Duration(
+                                            milliseconds: 150),
+                                        child: PickCard(
+                                          title: candidate.title,
+                                          imageUrl: candidate.imageUrl,
+                                          onTap: _isAnimating
+                                              ? () {}
+                                              : () => _onSelect(
+                                                    provider,
+                                                    candidate,
+                                                  ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                        ),
+            ),
+          ),
+
+          // 승자 애니메이션
+          if (_selected != null && _isAnimating)
+            PickWinnerAnimator(
+              candidate: _selected!,
+              isLeftCard: _isLeftCardSelected,
+              onAnimationComplete: () {
+                provider.pickWinner(_selected!);
+                Future.delayed(const Duration(milliseconds: 200), () {
+                  if (!mounted) return;
+                  setState(() {
+                    _selected = null;
+                    _isAnimating = false;
+                  });
+                });
+              },
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
 
   /// 카드 선택 시 호출
   void _onSelect(TournamentProvider provider, Candidate candidate) {
@@ -239,14 +214,16 @@ class _TournamentScreenState extends State<TournamentScreen> {
 // 부전승 카드 전용 UI
 // ---------------------------------------------------------------------------
 class _ByeCard extends StatelessWidget {
-  final bool isDark;
-  const _ByeCard({required this.isDark});
+  final ColorScheme scheme;
+  const _ByeCard({required this.scheme});
 
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? Colors.black.withOpacity(0.3) : Colors.white;
-    final border = isDark ? Colors.white24 : Colors.grey.shade300;
-    final textColor = isDark ? Colors.white70 : Colors.grey.shade800;
+    final bg = scheme.surfaceVariant.withValues(
+      alpha: scheme.brightness == Brightness.dark ? 0.8 : 0.95,
+    );
+    final border = scheme.outlineVariant;
+    final textColor = scheme.onSurfaceVariant;
 
     return Container(
       height: 260,

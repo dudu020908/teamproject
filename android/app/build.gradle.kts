@@ -1,3 +1,5 @@
+import java.util.Properties
+import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -19,18 +21,20 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    signingConfigs {
-        create("release") {
-            val keystoreProperties = java.util.Properties()
-            val keystoreFile = rootProject.file("key.properties")
-            keystoreProperties.load(java.io.FileInputStream(keystoreFile))
+signingConfigs {
+    create("release") {
+        val keystoreFile = rootProject.file("key.properties")
 
-            storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
+        val keystoreProperties = Properties().apply {
+            load(FileInputStream(keystoreFile))
         }
+
+        storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+        storePassword = keystoreProperties["storePassword"] as String
+        keyAlias = keystoreProperties["keyAlias"] as String
+        keyPassword = keystoreProperties["keyPassword"] as String
     }
+}
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -43,10 +47,9 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+   buildTypes {
+        getByName("release") {
+            // keystore가 제대로 읽히면 release 키로, 아니면 그냥 디폴트(=debug 키)로 서명
             signingConfig = signingConfigs.getByName("release")
         }
     }

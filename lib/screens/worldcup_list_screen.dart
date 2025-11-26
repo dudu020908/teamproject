@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
-import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
+import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/logout_button.dart';
 
 class WorldcupListScreen extends StatelessWidget {
@@ -16,7 +16,7 @@ class WorldcupListScreen extends StatelessWidget {
     final categoryId = args['categoryId'];
     final categoryTitle = args['title'];
     final emoji = args['emoji'];
-
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -40,9 +40,9 @@ class WorldcupListScreen extends StatelessWidget {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator(
-                        color: Colors.pinkAccent,
+                        color: scheme.primary,
                       ),
                     );
                   }
@@ -79,7 +79,10 @@ class WorldcupListScreen extends StatelessWidget {
                           subtitle: wc["description"] != ""
                               ? Text(wc["description"])
                               : null,
-                          trailing: const Icon(Icons.chevron_right),
+                           trailing: Icon(
+                            Icons.chevron_right,
+                            color: scheme.onSurfaceVariant,
+                          ),
 
                           onTap: () {
                             Navigator.pushNamed(

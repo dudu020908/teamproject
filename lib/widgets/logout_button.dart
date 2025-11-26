@@ -8,18 +8,20 @@ class LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor =
-        color ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? Colors.white70
-            : Colors.black87);
+    final scheme = Theme.of(context).colorScheme;
+    final iconColor = color ?? scheme.onSurfaceVariant;
 
-    return IconButton(
-        icon: Icon(Icons.logout, size: 28, color: iconColor),
-        onPressed: () async {
-          await LocalStorageService.clearUserInfo();
-          Navigator.pushReplacementNamed(context, '/userinfo');
-        },
+    return Semantics(
+      button: true,
+      label: '로그아웃하고 사용자 정보를 초기화',
+      child: IconButton(
+        tooltip: '로그아웃',
+      icon: Icon(Icons.logout, size: 28, color: iconColor),
+      onPressed: () async {
+        await LocalStorageService.clearUserInfo();
+        Navigator.pushReplacementNamed(context, '/userinfo');
+      },
+      ),
     );
   }
 }
