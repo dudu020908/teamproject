@@ -111,6 +111,8 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
         final textColor = isDark ? Colors.white : Colors.black87;
         final subTextColor = isDark ? Colors.grey[400] : Colors.grey[700];
         final boxColor = isDark ? Colors.grey[850] : Colors.white;
+        final inputLen = _controller.text.trim().length;
+        final numFontSize = inputLen >= 3 ? 40.0 : 48.0;
 
         // topic, emoji 는 arguments 에서 받지 않음 → 모두 widget 값 사용
         final inputValue = int.tryParse(_controller.text) ?? 0;
@@ -214,7 +216,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     SizedBox(
-                                      width: 80,
+                                      width: 120,
                                       child: Focus(
                                         onFocusChange: (hasFocus) {
                                           setState(() => _showHint = !hasFocus);
@@ -227,18 +229,22 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                                 .digitsOnly,
                                           ],
                                           textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontSize: 48,
-                                            color: Color(0xFFFF5C8D),
+                                          style: TextStyle(
+                                            fontSize:
+                                                numFontSize, // 길이에 따라 폰트 크기 조절
+                                            color: const Color(0xFFFF5C8D),
                                             fontWeight: FontWeight.bold,
                                           ),
                                           decoration: InputDecoration(
+                                            isCollapsed: true,
+                                            contentPadding: EdgeInsets.zero,
                                             hintText: _showHint ? "8" : "",
                                             hintStyle: TextStyle(
                                               color: Colors.grey.withOpacity(
                                                 0.3,
                                               ),
-                                              fontSize: 48,
+                                              fontSize:
+                                                  numFontSize, // 힌트도 동일 크기
                                               fontWeight: FontWeight.bold,
                                             ),
                                             border: InputBorder.none,
@@ -265,7 +271,11 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                                                 isDark,
                                               );
                                             }
-                                            setState(() {});
+
+                                            setState(() {
+                                              //  직접 입력 시 빠른 선택 해제
+                                              selectedQuick = null;
+                                            });
                                           },
                                         ),
                                       ),
@@ -283,32 +293,95 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
 
                               const SizedBox(height: 24),
 
+                              // 기존: Wrap(...) 부분 전체 교체
                               Text(
                                 "빠른 선택",
                                 style: TextStyle(color: subTextColor),
                               ),
                               const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                children: [8, 16, 32, 64, 128].map((num) {
-                                  final isSelected = selectedQuick == num;
-                                  return ChoiceChip(
-                                    label: Text("${num}강"),
-                                    selected: isSelected,
-                                    selectedColor: const Color(0xFFFF5C8D),
-                                    labelStyle: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : textColor,
-                                    ),
-                                    onSelected: (_) {
-                                      setState(() {
-                                        selectedQuick = num;
-                                        _controller.text = num.toString();
-                                      });
-                                    },
-                                  );
-                                }).toList(),
+
+                              Column(
+                                children: [
+                                  // 1줄: 8, 16, 32
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [8, 16, 32].map((num) {
+                                      final isSelected = selectedQuick == num;
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0,
+                                        ),
+                                        child: ChoiceChip(
+                                          label: Text("${num}강"),
+                                          selected: isSelected,
+                                          selectedColor: const Color(
+                                            0xFFFF5C8D,
+                                          ),
+                                          labelStyle: TextStyle(
+                                            color: isSelected
+                                                ? Colors.white
+                                                : textColor,
+                                          ),
+                                          onSelected: (_) {
+                                            setState(() {
+                                              if (isSelected) {
+                                                // 다시 누르면 해제 + 위 입력칸 초기화
+                                                selectedQuick = null;
+                                                _controller.clear();
+                                                _showHint = true;
+                                              } else {
+                                                selectedQuick = num;
+                                                _controller.text =
+                                                    num.toString();
+                                                _showHint = false;
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // 2줄: 64, 128
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [64, 128].map((num) {
+                                      final isSelected = selectedQuick == num;
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0,
+                                        ),
+                                        child: ChoiceChip(
+                                          label: Text("${num}강"),
+                                          selected: isSelected,
+                                          selectedColor: const Color(
+                                            0xFFFF5C8D,
+                                          ),
+                                          labelStyle: TextStyle(
+                                            color: isSelected
+                                                ? Colors.white
+                                                : textColor,
+                                          ),
+                                          onSelected: (_) {
+                                            setState(() {
+                                              if (isSelected) {
+                                                selectedQuick = null;
+                                                _controller.clear();
+                                                _showHint = true;
+                                              } else {
+                                                selectedQuick = num;
+                                                _controller.text =
+                                                    num.toString();
+                                                _showHint = false;
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
                               ),
 
                               const SizedBox(height: 40),
@@ -353,16 +426,8 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
                     },
                   ),
 
-                const Positioned(
-                top: 16,
-                left: 16,
-                child: LogoutButton(),
-              ),
-              const Positioned(
-                top: 16,
-                right: 16,
-                child: DarkModeToggle(),
-              ),
+                  const Positioned(top: 16, left: 16, child: LogoutButton()),
+                  const Positioned(top: 16, right: 16, child: DarkModeToggle()),
                 ],
               ),
             ),

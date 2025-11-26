@@ -17,6 +17,7 @@ dependencies:
   provider: ^6.1.2 
   # 최근 우승자 및 즐겨찾기 저장용
   shared_preferences: ^2.2.3
+  crypto: ^3.0.7
 
   cupertino_icons: ^1.0.8
 

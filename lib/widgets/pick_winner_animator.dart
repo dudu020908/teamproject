@@ -57,7 +57,7 @@ class _PickWinnerAnimatorState extends State<PickWinnerAnimator>
 
     _moveAnim = Tween<Offset>(
       begin: const Offset(0, 0),
-      end: Offset(direction * 0.3, -0.2), 
+      end: Offset(direction * 0.3, -0.2),
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     // 애니메이션이 완료되면 onAnimationComplete 콜백 호출
