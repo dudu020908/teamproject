@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -152,6 +150,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.edit, size: 20),
+                                  tooltip: '카테고리 편집',
                                   onPressed: () {
                                     Navigator.pop(context);
                                     _openEditCategoryDialog(
@@ -168,6 +167,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                     size: 20,
                                     color: Colors.red,
                                   ),
+                                  tooltip: '카테고리 삭제',
                                   onPressed: () {
                                     Navigator.pop(context);
                                     _deleteCategory(doc.id);
@@ -908,6 +908,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: '이전 화면으로 돌아가기',
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text("월드컵 생성"),
@@ -1093,10 +1094,12 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.edit, size: 20),
+              tooltip: '후보 수정',
               onPressed: () => _openEditCandidateDialog(c),
             ),
             IconButton(
               icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+              tooltip: '후보 삭제',
               onPressed: () => _deleteCandidate(c),
             ),
           ],
@@ -1272,7 +1275,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                               if (pickedFile != null) {
                                 final bytes = await _compressImage(pickedFile!);
                                 storagePath =
-                                    "categories/${_selectedCategoryId}/candidates/${DateTime.now().millisecondsSinceEpoch}.jpg";
+                                    "categories/$_selectedCategoryId/candidates/${DateTime.now().millisecondsSinceEpoch}.jpg";
                                 final ref = FirebaseStorage.instance
                                     .ref()
                                     .child(storagePath);

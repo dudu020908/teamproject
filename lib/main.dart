@@ -22,15 +22,16 @@ import 'themes/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  final prefsWarmUp = LocalStorageService.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser == null) {
-    await auth.signInAnonymously();
-  }
+  final Future<void> signInFuture =
+      auth.currentUser == null ? auth.signInAnonymously() : Future.value();
 
-  final userInfo = await LocalStorageService.loadUserInfo();
-  final String initialRoute = '/home';
+  await Future.wait([prefsWarmUp, signInFuture]);
+  const String initialRoute = '/home';
 
   runApp(
     MultiProvider(
@@ -58,6 +59,17 @@ class IdealWorldcupApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: tm.mode,
+
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            final clampedScale =
+                mediaQuery.textScaleFactor.clamp(1.0, 1.5);
+            return MediaQuery(
+              data:
+                  mediaQuery.copyWith(textScaler: TextScaler.linear(clampedScale)),
+              child: child!,
+            );
+          },
 
           initialRoute: initialRoute,
 
@@ -91,7 +103,7 @@ class IdealWorldcupApp extends StatelessWidget {
 }
 
 class ThemeModeNotifier extends ChangeNotifier {
-  ThemeMode _mode = ThemeMode.system;
+  ThemeMode _mode = ThemeMode.light; // 기본은 라이트 모드로 시작
   ThemeMode get mode => _mode;
 
   void toggle() {

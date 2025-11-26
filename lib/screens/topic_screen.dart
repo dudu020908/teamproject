@@ -36,18 +36,26 @@ class TopicScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           "어떤 월드컵을 해볼까요?",
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 8),
                         Text(
                           "원하는 이상형 월드컵을 선택해주세요",
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                                style: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.75),
+                          ),
                         ),
                       ],
                     ),
@@ -66,7 +74,6 @@ class TopicScreen extends StatelessWidget {
                             child: CircularProgressIndicator(),
                           );
                         }
-
                         if (snapshot.hasError) {
                           return Center(
                             child: Text(
@@ -96,40 +103,48 @@ class TopicScreen extends StatelessWidget {
                             horizontal: 16,
                             vertical: 8,
                           ),
-                          child: GridView.builder(
-                            itemCount: docs.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
-                                  childAspectRatio: 1,
-                                ),
-                            itemBuilder: (context, index) {
-                              final doc = docs[index];
-                              final data = doc.data() as Map<String, dynamic>;
+                          child: FocusTraversalGroup(
+                            policy: WidgetOrderTraversalPolicy(),
+                            child: GridView.builder(
+                              itemCount: docs.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 1,
+                              ),
+                              itemBuilder: (context, index) {
+                                final doc = docs[index];
+                                final data =
+                                    doc.data() as Map<String, dynamic>;
 
-                              final title = data['title'] ?? "제목 없음";
-                              final emoji = data['emoji'] ?? "🏆";
-                              final imageUrl = data['imageUrl'] ?? "";
+                                final title = data['title'] ?? "제목 없음";
+                                final emoji = data['emoji'] ?? "🏆";
+                                final imageUrl = data['imageUrl'] ?? "";
 
-                              return _WorldcupCard(
-                                title: title,
-                                emoji: emoji,
-                                imageUrl: imageUrl,
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/roundselection',
-                                    arguments: {
-                                      'categoryId': doc.id,
-                                      'title': title,
-                                      'emoji': emoji,
+                                return FocusTraversalOrder(
+                                  order: NumericFocusOrder(index.toDouble()),
+                                  child: _WorldcupCard(
+                                    title: title,
+                                    emoji: emoji,
+                                    imageUrl: imageUrl,
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/roundselection',
+                                        arguments: {
+                                          'categoryId': doc.id,
+                                          'title': title,
+                                          'emoji': emoji,
+                                          'imageUrl': imageUrl,
+                                        },
+                                      );
                                     },
-                                  );
-                                },
-                              );
-                            },
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         );
                       },
@@ -142,16 +157,17 @@ class TopicScreen extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.add),
-                        label: const Text(
+                        icon: Icon(Icons.add ,color: isDark ? Colors.blueGrey: Colors.white ,),
+                        label: Text(
                           "월드컵 생성하기",
                           style: TextStyle(
+                            color: isDark ? Colors.blueGrey: Colors.white ,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF5C8D),
+                          backgroundColor: isDark ? Colors.pinkAccent: Colors.blueAccent ,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -194,86 +210,96 @@ class _WorldcupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // 배경 이미지
-            if (imageUrl.isNotEmpty)
-              Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) => Container(
-                  color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],
-                  child: const Icon(Icons.image_not_supported),
-                ),
-              )
-            else
-              Container(
-                color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],
-              ),
-            //아래에서 위로 올라가는 어두운 그라디언트
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.65),
-                    Colors.black.withOpacity(0.20),
-                    Colors.transparent,
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                ),
-              ),
-            ),
-
-            // 이모지 + 제목
-            Align(
-              alignment: const Alignment(0, 0.35),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 이모지 강조를 위한 반투명 원형 배경
+    return Tooltip(
+      message: '$title 월드컵 카드 열기',
+      child: Semantics(
+        button: true,
+        label: '$title 월드컵 선택',
+        child: GestureDetector(
+          onTap: onTap,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 배경 이미지
+                if (imageUrl.isNotEmpty)
+                  Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => Container(
+                      color:
+                          isDark ? const Color(0xFF2C3E50) : Colors.grey[300],
+                      child: const Icon(Icons.image_not_supported),
+                    ),
+                  )
+                else
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.35),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(
-                        fontSize: 32,
-                        shadows: [Shadow(color: Colors.black54, blurRadius: 6)],
-                      ),
-                    ),
+                    color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],                    
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 5,
-                          color: Colors.black87,
-                          offset: Offset(0, 1),
-                        ),
+                                  //아래에서 위로 올라가는 어두운 그라디언트
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.65),
+                        Colors.black.withOpacity(0.20),
+                        Colors.transparent,
                       ],
+                     begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,                      
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // 이모지 + 제목
+                Align(
+                  alignment: const Alignment(0, 0.35),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 이모지 강조를 위한 반투명 원형 배경
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.35),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            shadows: [
+                              Shadow(color: Colors.black54, blurRadius: 6)
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 5,
+                              color: Colors.black87,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],               
             ),
-          ],
+          ),
         ),
       ),
     );

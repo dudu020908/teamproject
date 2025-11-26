@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -97,22 +97,24 @@ class _HomeScreenState extends State<HomeScreen>
                         width: 150,
                         height: 150,
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[900] : Colors.white,
+                          color: scheme.surface,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
+                              color: scheme.shadow.withOpacity(0.25),
                               blurRadius: 20,
                               spreadRadius: 4,
                               offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.emoji_events,
                             size: 64,
-                            color: Color(0xFFFFC107),
+                              color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.amber.shade300
+                            : Colors.amber.shade500,
                           ),
                         ),
                       ),
@@ -128,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen>
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: scheme.onSurface,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -143,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen>
                         "당신의 선택이 당신을 말해줍니다",
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDark ? Colors.grey[300] : Colors.grey,
+                          color: scheme.onSurface.withOpacity(0.7)
                         ),
                       ),
                     ),
@@ -158,9 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
                           _start();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? Colors.blueGrey[700]
-                              : const Color(0xFF1565C0),
+                          backgroundColor: scheme.primary,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 60,
                             vertical: 16,
@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen>
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : Colors.white,
+                            color: scheme.onPrimary,
                           ),
                         ),
                       ),
