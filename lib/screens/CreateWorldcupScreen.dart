@@ -547,6 +547,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     XFile? pickedFile;
     final selectedTypes = <String>{};
     String? dialogError;
+    bool isSubmitting = false;
 
     showDialog(
       context: context,
@@ -711,109 +712,129 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                           ),
                           const SizedBox(width: 8),
                           FilledButton(
-                            onPressed: () async {
-                              final missingName = nameCtl.text.trim().isEmpty;
-                              final missingType = selectedTypes.length != 1;
-                              final missingImage = pickedFile == null;
+                            onPressed: isSubmitting
+                                ? null
+                                : () async {
+                                    setStateLocal(() {
+                                      isSubmitting = true;
+                                    });
 
-                              if (missingName || missingType || missingImage) {
-                                _updateError();
-                                return;
-                              }
+                                    final missingName = nameCtl.text
+                                        .trim()
+                                        .isEmpty;
+                                    final missingType =
+                                        selectedTypes.length != 1;
+                                    final missingImage = pickedFile == null;
 
-                              final categoryId = _selectedCategoryId!;
-                              final newName = nameCtl.text.trim();
+                                    if (missingName ||
+                                        missingType ||
+                                        missingImage) {
+                                      _updateError();
+                                      return;
+                                    }
 
-                              // 이미지 압축 + 해시 계산
-                              final bytes = await _compressImage(pickedFile!);
-                              final String newImageHash = md5
-                                  .convert(bytes)
-                                  .toString();
+                                    final categoryId = _selectedCategoryId!;
+                                    final newName = nameCtl.text.trim();
 
-                              // 이름 중복 체크
-                              final bool nameExists = _candidates.any((c) {
-                                final existingName =
-                                    (c["name"] as String?)?.trim() ?? "";
-                                return existingName == newName;
-                              });
+                                    // 이미지 압축 + 해시 계산
+                                    final bytes = await _compressImage(
+                                      pickedFile!,
+                                    );
+                                    final String newImageHash = md5
+                                        .convert(bytes)
+                                        .toString();
 
-                              // 이미지 중복 체크 (imageHash 비교)
-                              final bool imageExists = _candidates.any((c) {
-                                final existingHash =
-                                    (c["imageHash"] as String?) ?? "";
-                                return existingHash.isNotEmpty &&
-                                    existingHash == newImageHash;
-                              });
+                                    // 이름 중복 체크
+                                    final bool nameExists = _candidates.any((
+                                      c,
+                                    ) {
+                                      final existingName =
+                                          (c["name"] as String?)?.trim() ?? "";
+                                      return existingName == newName;
+                                    });
 
-                              if (nameExists || imageExists) {
-                                final msg = nameExists && imageExists
-                                    ? "이미 같은 이름과 사진이 있습니다."
-                                    : nameExists
-                                    ? "중복된 이름입니다."
-                                    : "중복된 사진입니다.";
+                                    // 이미지 중복 체크 (imageHash 비교)
+                                    final bool imageExists = _candidates.any((
+                                      c,
+                                    ) {
+                                      final existingHash =
+                                          (c["imageHash"] as String?) ?? "";
+                                      return existingHash.isNotEmpty &&
+                                          existingHash == newImageHash;
+                                    });
 
-                                if (context.mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (dialogContext) {
-                                      return AlertDialog(
-                                        title: const Text("다시 선택해주세용"),
-                                        content: Text(msg),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(dialogContext),
-                                            child: const Text("확인"),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                }
-                                return;
-                              }
+                                    if (nameExists || imageExists) {
+                                      final msg = nameExists && imageExists
+                                          ? "이미 같은 이름과 사진이 있습니다."
+                                          : nameExists
+                                          ? "중복된 이름입니다."
+                                          : "중복된 사진입니다.";
 
-                              // Storage 업로드 & Firestore 저장
-                              final candRef = FirebaseFirestore.instance
-                                  .collection("categories")
-                                  .doc(categoryId)
-                                  .collection("candidates")
-                                  .doc();
+                                      if (context.mounted) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (dialogContext) {
+                                            return AlertDialog(
+                                              title: const Text("다시 선택해주세용"),
+                                              content: Text(msg),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        dialogContext,
+                                                      ),
+                                                  child: const Text("확인"),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                      return;
+                                    }
 
-                              final candId = candRef.id;
+                                    // Storage 업로드 & Firestore 저장
+                                    final candRef = FirebaseFirestore.instance
+                                        .collection("categories")
+                                        .doc(categoryId)
+                                        .collection("candidates")
+                                        .doc();
 
-                              final storagePath =
-                                  "categories/$categoryId/candidates/$candId.jpg";
+                                    final candId = candRef.id;
 
-                              final storageRef = FirebaseStorage.instance
-                                  .ref()
-                                  .child(storagePath);
+                                    final storagePath =
+                                        "categories/$categoryId/candidates/$candId.jpg";
 
-                              await storageRef.putData(bytes);
+                                    final storageRef = FirebaseStorage.instance
+                                        .ref()
+                                        .child(storagePath);
 
-                              final url = await storageRef.getDownloadURL();
+                                    await storageRef.putData(bytes);
 
-                              await candRef.set({
-                                "name": newName,
-                                "imageUrl": url,
-                                "imagePath": storagePath,
-                                "createdAt": Timestamp.now(),
-                                "types": selectedTypes.toList(),
-                                "imageHash": newImageHash, // ✅ 해시도 저장
-                              });
+                                    final url = await storageRef
+                                        .getDownloadURL();
 
-                              setState(() {
-                                _candidates.add({
-                                  "id": candId,
-                                  "name": newName,
-                                  "imageUrl": url,
-                                  "types": selectedTypes.toList(),
-                                  "imageHash": newImageHash, // ✅ 로컬에도 저장
-                                });
-                              });
+                                    await candRef.set({
+                                      "name": newName,
+                                      "imageUrl": url,
+                                      "imagePath": storagePath,
+                                      "createdAt": Timestamp.now(),
+                                      "types": selectedTypes.toList(),
+                                      "imageHash": newImageHash, //  해시도 저장
+                                    });
 
-                              if (context.mounted) Navigator.pop(context);
-                            },
+                                    setState(() {
+                                      _candidates.add({
+                                        "id": candId,
+                                        "name": newName,
+                                        "imageUrl": url,
+                                        "types": selectedTypes.toList(),
+                                        "imageHash": newImageHash, //  로컬에도 저장
+                                      });
+                                    });
+
+                                    if (context.mounted) Navigator.pop(context);
+                                  },
                             child: const Text("추가"),
                           ),
                         ],
