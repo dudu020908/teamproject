@@ -225,6 +225,7 @@ class _WorldcupCard extends StatelessWidget {
               children: [
                 // 배경 이미지
                 if (imageUrl.isNotEmpty)
+                // 이미지 캐싱
                   CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
@@ -238,7 +239,7 @@ class _WorldcupCard extends StatelessWidget {
                       child: const Icon(Icons.image_not_supported),
                     ),
                   )
-                  
+
                 else
                   Container(
                     color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],                    
