@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:teamproject/service/local_storage_service.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
@@ -49,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(seconds: 1));
+      FlutterNativeSplash.remove();
       if (mounted) _controller.forward();
     });
   }
@@ -76,114 +79,122 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // 상단 다크모드 토글 버튼 (공통 위젯)
-              const Positioned(top: 16, right: 16, child: DarkModeToggle()),
+    return WillPopScope(
+      onWillPop: () async {
+        SystemNavigator.pop();
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: GradientBackground(
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // 상단 다크모드 토글 버튼 (공통 위젯)
+                const Positioned(top: 16, right: 16, child: DarkModeToggle()),
 
-              // 메인 콘텐츠
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 왕관 원형 등장 애니메이션
-                    ScaleTransition(
-                      scale: _scaleAnim1,
-                      child: Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          color: scheme.surface,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: scheme.shadow.withOpacity(0.25),
-                              blurRadius: 20,
-                              spreadRadius: 4,
-                              offset: const Offset(0, 8),
+                // 메인 콘텐츠
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 왕관 원형 등장 애니메이션
+                      ScaleTransition(
+                        scale: _scaleAnim1,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: scheme.onSurface.withOpacity(0.25),
+                                blurRadius: 20,
+                                spreadRadius: 4,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.emoji_events,
+                              size: 64,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.amber.shade300
+                                  : Colors.amber.shade500,
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.emoji_events,
-                            size: 64,
-                              color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.amber.shade300
-                            : Colors.amber.shade500,
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // My Pick 텍스트 (페이드 인)
-                    FadeTransition(
-                      opacity: _fadeAnim1,
-                      child: Text(
-                        "My Pick",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: scheme.onSurface,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // 부제 텍스트
-                    FadeTransition(
-                      opacity: _fadeAnim2,
-                      child: Text(
-                        "당신의 선택이 당신을 말해줍니다",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: scheme.onSurface.withOpacity(0.7)
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 60),
-
-                    // 시작하기 버튼
-                    ScaleTransition(
-                      scale: _scaleAnim2,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _start();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 60,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 5,
-                        ),
+                      // My Pick 텍스트 (페이드 인)
+                      FadeTransition(
+                        opacity: _fadeAnim1,
                         child: Text(
-                          "시작하기",
+                          "My Pick",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: scheme.onPrimary,
+                            color: scheme.onSurface,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 8),
+
+                      // 부제 텍스트
+                      FadeTransition(
+                        opacity: _fadeAnim2,
+                        child: Text(
+                          "당신의 선택이 당신을 말해줍니다",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: scheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 60),
+
+                      // 시작하기 버튼
+                      ScaleTransition(
+                        scale: _scaleAnim2,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _start();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: scheme.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 60,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 5,
+                          ),
+                          child: Text(
+                            "시작하기",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: scheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

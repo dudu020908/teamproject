@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'firebase_options.dart';
 
@@ -21,14 +22,16 @@ import 'package:teamproject/screens/worldcup_list_screen.dart';
 import 'themes/app_theme.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   final prefsWarmUp = LocalStorageService.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final auth = FirebaseAuth.instance;
-  final Future<void> signInFuture =
-      auth.currentUser == null ? auth.signInAnonymously() : Future.value();
+  final Future<void> signInFuture = auth.currentUser == null
+      ? auth.signInAnonymously()
+      : Future.value();
 
   await Future.wait([prefsWarmUp, signInFuture]);
   const String initialRoute = '/home';
@@ -62,11 +65,11 @@ class IdealWorldcupApp extends StatelessWidget {
 
           builder: (context, child) {
             final mediaQuery = MediaQuery.of(context);
-            final clampedScale =
-                mediaQuery.textScaleFactor.clamp(1.0, 1.5);
+            final clampedScale = mediaQuery.textScaleFactor.clamp(1.0, 1.5);
             return MediaQuery(
-              data:
-                  mediaQuery.copyWith(textScaler: TextScaler.linear(clampedScale)),
+              data: mediaQuery.copyWith(
+                textScaler: TextScaler.linear(clampedScale),
+              ),
               child: child!,
             );
           },

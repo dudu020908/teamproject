@@ -42,6 +42,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
 
+  flutter_native_splash: ^2.4.1
+
+  flutter_launcher_icons: ^0.13.1
 
 
 
@@ -54,3 +57,27 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
+flutter_native_splash:
+  android: true
+  ios: false       # iOS 안 하면 false
+
+  # 라이트 모드 배경색 (너무 어둡지 않게)
+  color: "#F9FAFB"
+  image: "assets/app_logo.png"
+
+  # 다크 모드
+  color_dark: "#020617"
+  image_dark: "assets/app_logo.png"
+
+  # Android 12 이상 전용
+  android_12:
+    image: "assets/app_logo.png"
+    image_dark: "assets/app_logo.png"
+    color: "#F9FAFB"
+    color_dark: "#020617"
+
+flutter_launcher_icons:
+  android: true
+  ios: false      # iOS 안 쓰면 false
+  image_path: "assets/app_icon.png"
+  min_sdk_android: 21
