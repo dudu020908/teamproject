@@ -989,7 +989,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                       width: 56,
                       height: 56,
                       child: Material(
-                        color: Colors.white,
+                        color: isDark ? Colors.black : Colors.white,
                         elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
