@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
 import 'package:teamproject/widgets/logout_button.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class TopicScreen extends StatelessWidget {
   const TopicScreen({super.key});
@@ -224,15 +225,21 @@ class _WorldcupCard extends StatelessWidget {
               children: [
                 // 배경 이미지
                 if (imageUrl.isNotEmpty)
-                  Image.network(
-                    imageUrl,
+                // 이미지 캐싱
+                  CachedNetworkImage(
+                    imageUrl: imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => Container(
-                      color:
-                          isDark ? const Color(0xFF2C3E50) : Colors.grey[300],
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: isDark
+                          ? const Color(0xFF2C3E50)
+                          : Colors.grey[300],
                       child: const Icon(Icons.image_not_supported),
                     ),
                   )
+
                 else
                   Container(
                     color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],                    
