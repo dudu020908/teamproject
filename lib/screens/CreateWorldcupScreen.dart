@@ -12,6 +12,7 @@ import 'package:crypto/crypto.dart'; // md5 해시
 
 import 'package:teamproject/widgets/gradient_background.dart';
 import 'package:teamproject/widgets/dark_mode_toggle.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CreateWorldcupScreen extends StatefulWidget {
   const CreateWorldcupScreen({super.key});
@@ -1081,12 +1082,14 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     if (imageUrl.isNotEmpty) {
       leading = ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          imageUrl,
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
           width: 56,
           height: 56,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => Container(
+          placeholder: (context, url) =>
+              Container(width: 56, height: 56, color: Colors.grey[300]),
+          errorWidget: (context, url, error) => Container(
             width: 56,
             height: 56,
             color: Colors.grey[300],
@@ -1264,11 +1267,23 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                         height: 120,
                                         fit: BoxFit.cover,
                                       ))
-                              : Image.network(
-                                  currentImageUrl,
+                              : CachedNetworkImage(
+                                  imageUrl: currentImageUrl,
                                   width: 120,
                                   height: 120,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    width: 120,
+                                    height: 120,
+                                    color: Colors.grey[300],
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                        width: 120,
+                                        height: 120,
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.broken_image),
+                                      ),
                                 ),
                         ),
                       const SizedBox(height: 20),
