@@ -50,12 +50,11 @@ class TopicScreen extends StatelessWidget {
                         SizedBox(height: 8),
                         Text(
                           "원하는 이상형 월드컵을 선택해주세요",
-                                style: TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.75),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.75),
                           ),
                         ),
                       ],
@@ -110,15 +109,14 @@ class TopicScreen extends StatelessWidget {
                               itemCount: docs.length,
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 1,
-                              ),
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 1,
+                                  ),
                               itemBuilder: (context, index) {
                                 final doc = docs[index];
-                                final data =
-                                    doc.data() as Map<String, dynamic>;
+                                final data = doc.data() as Map<String, dynamic>;
 
                                 final title = data['title'] ?? "제목 없음";
                                 final emoji = data['emoji'] ?? "🏆";
@@ -158,17 +156,22 @@ class TopicScreen extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        icon: Icon(Icons.add ,color: isDark ? Colors.blueGrey: Colors.white ,),
+                        icon: Icon(
+                          Icons.add,
+                          color: isDark ? Colors.blueGrey : Colors.white,
+                        ),
                         label: Text(
                           "월드컵 생성하기",
                           style: TextStyle(
-                            color: isDark ? Colors.blueGrey: Colors.white ,
+                            color: isDark ? Colors.blueGrey : Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark ? Colors.pinkAccent: Colors.blueAccent ,
+                          backgroundColor: isDark
+                              ? Colors.pinkAccent
+                              : Colors.blueAccent,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -225,7 +228,7 @@ class _WorldcupCard extends StatelessWidget {
               children: [
                 // 배경 이미지
                 if (imageUrl.isNotEmpty)
-                // 이미지 캐싱
+                  // 이미지 캐싱
                   CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
@@ -239,12 +242,11 @@ class _WorldcupCard extends StatelessWidget {
                       child: const Icon(Icons.image_not_supported),
                     ),
                   )
-
                 else
                   Container(
-                    color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],                    
+                    color: isDark ? const Color(0xFF2C3E50) : Colors.grey[300],
                   ),
-                                  //아래에서 위로 올라가는 어두운 그라디언트
+                //아래에서 위로 올라가는 어두운 그라디언트
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -253,8 +255,8 @@ class _WorldcupCard extends StatelessWidget {
                         Colors.black.withOpacity(0.20),
                         Colors.transparent,
                       ],
-                     begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,                      
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
                     ),
                   ),
                 ),
@@ -277,7 +279,7 @@ class _WorldcupCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 32,
                             shadows: [
-                              Shadow(color: Colors.black54, blurRadius: 6)
+                              Shadow(color: Colors.black54, blurRadius: 6),
                             ],
                           ),
                         ),
@@ -304,7 +306,7 @@ class _WorldcupCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ],               
+              ],
             ),
           ),
         ),
