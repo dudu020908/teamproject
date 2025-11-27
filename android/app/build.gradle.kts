@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -21,42 +22,58 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-signingConfigs {
-    create("release") {
-        val keystoreFile = rootProject.file("key.properties")
+    // 🔹 keystore / key.properties 읽기 (있으면만)
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    val keystoreProperties = Properties()
 
-        val keystoreProperties = Properties().apply {
-            load(FileInputStream(keystoreFile))
+    if (keystorePropertiesFile.exists()) {
+        FileInputStream(keystorePropertiesFile).use { fis ->
+            keystoreProperties.load(fis)
         }
-
-        storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-        storePassword = keystoreProperties["storePassword"] as String
-        keyAlias = keystoreProperties["keyAlias"] as String
-        keyPassword = keystoreProperties["keyPassword"] as String
     }
-}
+
+    signingConfigs {
+        // 기본 debug 서명은 안 건드림
+
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                storeFile = rootProject.file(
+                    keystoreProperties["storeFile"] as String
+                )
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.teamproject"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
-   buildTypes {
+    buildTypes {
         getByName("release") {
-            // keystore가 제대로 읽히면 release 키로, 아니면 그냥 디폴트(=debug 키)로 서명
-            signingConfig = signingConfigs.getByName("release")
+            // key.properties가 있으면 release 키로, 없으면 debug 서명 사용
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+
+            // 필요하면 여기서 minifyEnabled 같은 거 추가
+            // isMinifyEnabled = false
         }
     }
 }
+
 flutter {
     source = "../.."
 }
+
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("com.google.android.material:material:1.12.0")
