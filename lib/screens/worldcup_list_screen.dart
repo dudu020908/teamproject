@@ -41,9 +41,7 @@ class WorldcupListScreen extends StatelessWidget {
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
-                      child: CircularProgressIndicator(
-                        color: scheme.primary,
-                      ),
+                      child: CircularProgressIndicator(color: scheme.primary),
                     );
                   }
 
@@ -79,7 +77,7 @@ class WorldcupListScreen extends StatelessWidget {
                           subtitle: wc["description"] != ""
                               ? Text(wc["description"])
                               : null,
-                           trailing: Icon(
+                          trailing: Icon(
                             Icons.chevron_right,
                             color: scheme.onSurfaceVariant,
                           ),

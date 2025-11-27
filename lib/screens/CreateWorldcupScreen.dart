@@ -30,7 +30,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   // categories/{categoryId}/candidates 의 데이터를 여기로 가져옴
   final List<Map<String, dynamic>> _candidates = [];
 
-  /// 후보 타입 목록
+  // 후보 타입 목록
   final List<String> _allTypes = [
     "감성형",
     "이성형",
@@ -52,7 +52,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
   final ImagePicker _picker = ImagePicker();
 
-  // 선택된 카테고리 정보(필수!)
+  // 선택된 카테고리 정보
   String? _selectedCategoryId;
   String? _selectedCategoryTitle;
   String? _selectedCategoryEmoji;
@@ -423,7 +423,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     }
   }
 
-  // 카테고리 생성 Dialog (기존 로직)
+  // 카테고리 생성 Dialog
   void _openCreateCategoryDialog() {
     final titleCtl = TextEditingController();
     final emojiCtl = TextEditingController();
@@ -716,7 +716,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                             onPressed: isSubmitting
                                 ? null
                                 : () async {
-                                    // === 중복 클릭 방지 ===
+                                    // 중복 클릭 방지
                                     setStateLocal(() {
                                       isSubmitting = true;
                                     });
@@ -756,7 +756,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                       return existingName == newName;
                                     });
 
-                                    // 이미지 중복 체크 (imageHash 비교)
+                                    // 이미지 중복 체크
                                     final bool imageExists = _candidates.any((
                                       c,
                                     ) {
@@ -796,7 +796,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                       return;
                                     }
 
-                                    // Storage 업로드 & Firestore 저장
+                                    // Storage 업로드,Firestore 저장
                                     final candRef = FirebaseFirestore.instance
                                         .collection("categories")
                                         .doc(categoryId)
