@@ -29,6 +29,8 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   // 선택된 카테고리의 "후보 목록"
   // categories/{categoryId}/candidates 의 데이터를 여기로 가져옴
   final List<Map<String, dynamic>> _candidates = [];
+  final Set<String> _deletedCandidateIds = <String>{};
+  final Set<String> _deletedImagePaths = <String>{};
 
   // 후보 타입 목록
   final List<String> _allTypes = [
@@ -407,6 +409,9 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
               ? List<String>.from(data["types"])
               : <String>[],
           "imageHash": data["imageHash"] ?? "",
+          "imagePath": data["imagePath"],
+          "localBytes": null, // 새로 선택한 이미지(아직 업로드 X)
+          "isNew": false, // Firestore에서 온 기존 후보
         });
       }
 
@@ -797,43 +802,16 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                       return;
                                     }
 
-                                    // Storage 업로드,Firestore 저장
-                                    final candRef = FirebaseFirestore.instance
-                                        .collection("categories")
-                                        .doc(categoryId)
-                                        .collection("candidates")
-                                        .doc();
-
-                                    final candId = candRef.id;
-
-                                    final storagePath =
-                                        "categories/$categoryId/candidates/$candId.jpg";
-
-                                    final storageRef = FirebaseStorage.instance
-                                        .ref()
-                                        .child(storagePath);
-
-                                    await storageRef.putData(bytes);
-
-                                    final url = await storageRef
-                                        .getDownloadURL();
-
-                                    await candRef.set({
-                                      "name": newName,
-                                      "imageUrl": url,
-                                      "imagePath": storagePath,
-                                      "createdAt": Timestamp.now(),
-                                      "types": selectedTypes.toList(),
-                                      "imageHash": newImageHash,
-                                    });
-
                                     setState(() {
                                       _candidates.add({
-                                        "id": candId,
+                                        "id": null, // 새 후보라 아직 없음
                                         "name": newName,
-                                        "imageUrl": url,
+                                        "imageUrl": "", // 아직 업로드 X
                                         "types": selectedTypes.toList(),
                                         "imageHash": newImageHash,
+                                        "imagePath": null,
+                                        "localBytes": bytes, // 화면에서만 쓰는 이미지
+                                        "isNew": true,
                                       });
                                     });
 
@@ -854,18 +832,11 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
     );
   }
 
-  // 월드컵 저장 (worldcups 컬렉션 + candidates 복사)
+  // 월드컵 저장
   Future<void> _saveWorldcup() async {
-    // 1. 제목 체크 없음
-    // 2. 카테고리 선택 필수
+    // 카테고리 선택 여부 확인
     if (_selectedCategoryId == null) {
       setState(() => errorMsg = "카테고리를 선택하세요.");
-      return;
-    }
-
-    // 3. 해당 카테고리 후보 수 최소 8명
-    if (_candidates.length < 8) {
-      setState(() => errorMsg = "선택한 카테고리에 후보가 최소 8명 이상 있어야 합니다.");
       return;
     }
 
@@ -876,48 +847,185 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
       _totalToUpload = _candidates.length;
     });
 
-    // 월드컵 문서 생성 (제목은 카테고리 이름 사용)
-    final worldcupTitle = _titleCtl.text.trim();
+    try {
+      //후보 목록 Firestore에 항상 동기화 (추가/수정/삭제)
+      await _commitCandidatesToFirestore(_selectedCategoryId!);
 
-    final wcRef = await FirebaseFirestore.instance.collection("worldcups").add({
-      "title": worldcupTitle.isEmpty
-          ? (_selectedCategoryTitle ?? "월드컵")
-          : worldcupTitle,
-      "description": _descCtl.text.trim(),
-      "createdAt": Timestamp.now(),
-      "categoryId": _selectedCategoryId,
-      "categoryTitle": _selectedCategoryTitle,
-      "categoryEmoji": _selectedCategoryEmoji,
-      "imageUrl": _selectedCategoryImageUrl,
-      "owner": "local_user",
-      "source": "user_created",
-    });
+      if (_candidates.length < 8) {
+        setState(() {
+          _saving = false;
+          errorMsg = "후보를 8명 이상 추가해야 월드컵을 생성할 수 있습니다.";
+        });
+        return;
+      }
 
-    final worldcupId = wcRef.id;
+      // worldcups 컬렉션에 월드컵 문서 생성
+      final worldcupTitle = _titleCtl.text.trim();
 
-    if (!mounted) return;
+      final wcRef = await FirebaseFirestore.instance
+          .collection("worldcups")
+          .add({
+            "title": worldcupTitle.isEmpty
+                ? (_selectedCategoryTitle ?? "월드컵")
+                : worldcupTitle,
+            "description": _descCtl.text.trim(),
+            "createdAt": Timestamp.now(),
+            "categoryId": _selectedCategoryId,
+            "categoryTitle": _selectedCategoryTitle,
+            "categoryEmoji": _selectedCategoryEmoji,
+            "imageUrl": _selectedCategoryImageUrl,
+            "owner": "local_user",
+            "source": "user_created",
+          });
 
-    setState(() {
-      _saving = false;
-    });
+      final worldcupId = wcRef.id;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("${_selectedCategoryTitle ?? '월드컵'} 생성이 완료되었습니다."),
-      ),
-    );
+      if (!mounted) return;
 
-    Navigator.pushReplacementNamed(
-      context,
-      '/topics',
-      arguments: {
-        'categoryId': _selectedCategoryId,
-        'title': _selectedCategoryTitle ?? "월드컵",
-        'emoji': _selectedCategoryEmoji ?? "🏆",
-        // 추 후 확장하게되면 통계용
-        'worldcupId': worldcupId,
-      },
-    );
+      setState(() {
+        _saving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${_selectedCategoryTitle ?? '월드컵'} 생성이 완료되었습니다."),
+        ),
+      );
+
+      Navigator.pushReplacementNamed(
+        context,
+        '/topics',
+        arguments: {
+          'categoryId': _selectedCategoryId,
+          'title': _selectedCategoryTitle ?? "월드컵",
+          'emoji': _selectedCategoryEmoji ?? "🏆",
+          'worldcupId': worldcupId,
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        errorMsg = "월드컵 저장 중 오류가 발생했습니다: $e";
+      });
+    }
+  }
+
+  Future<void> _commitCandidatesToFirestore(String categoryId) async {
+    final collRef = FirebaseFirestore.instance
+        .collection("categories")
+        .doc(categoryId)
+        .collection("candidates");
+
+    //Storage에서 삭제 예정 파일들 지우기
+    for (final path in _deletedImagePaths) {
+      try {
+        debugPrint("⚡ Storage 파일 삭제: $path");
+        await FirebaseStorage.instance.ref().child(path).delete();
+      } on FirebaseException catch (e) {
+        debugPrint("❌ Storage delete 실패 ($path): ${e.code} / ${e.message}");
+      } catch (e) {
+        debugPrint("❌ Storage delete 알 수 없는 오류 ($path): $e");
+      }
+    }
+    _deletedImagePaths.clear();
+
+    // 현재 Firestore에 있는 후보들 전체 읽어오기
+    final snap = await collRef.get();
+    final existingDocs = {for (final doc in snap.docs) doc.id: doc.data()};
+
+    final batch = FirebaseFirestore.instance.batch();
+    final currentIds = <String>{}; // 화면(_candidates)에 남아있는 후보들의 id 모음
+
+    //화면 기준으로 추가
+    for (final c in _candidates) {
+      final String? id = c["id"] as String?;
+      final String name = c["name"] as String? ?? "";
+      final List<String> types =
+          (c["types"] as List?)?.cast<String>() ?? <String>[];
+      final Uint8List? localBytes = c["localBytes"] as Uint8List?;
+      String? imageUrl = c["imageUrl"] as String?;
+      String? imagePath = c["imagePath"] as String?;
+
+      if (id == null) {
+        // 새 후보 (아직 Firestore에 없는 애)
+        if (localBytes == null) continue;
+
+        final docRef = collRef.doc();
+        final storagePath =
+            "categories/$categoryId/candidates/${docRef.id}.jpg";
+        final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+        await storageRef.putData(localBytes);
+        final url = await storageRef.getDownloadURL();
+
+        batch.set(docRef, {
+          "name": name,
+          "types": types,
+          "imageUrl": url,
+          "imagePath": storagePath,
+          "createdAt": Timestamp.now(),
+        });
+      } else {
+        currentIds.add(id);
+
+        final docRef = collRef.doc(id);
+        final Map<String, dynamic> updateData = {"name": name, "types": types};
+
+        if (localBytes != null) {
+          // 이미지가 수정된 경우
+          final storagePath =
+              imagePath ?? "categories/$categoryId/candidates/$id.jpg";
+          final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+          await storageRef.putData(localBytes);
+          final url = await storageRef.getDownloadURL();
+
+          updateData["imageUrl"] = url;
+          updateData["imagePath"] = storagePath;
+        }
+
+        if (existingDocs.containsKey(id)) {
+          // Firestore에 이미 있던 문서 → update
+          batch.update(docRef, updateData);
+        } else {
+          // Firestore엔 없는데 로컬에만 id 있는 이상 상태 → set으로 생성
+          batch.set(docRef, {
+            ...updateData,
+            "imageUrl": imageUrl,
+            "imagePath": imagePath,
+            "createdAt": Timestamp.now(),
+          });
+        }
+      }
+    }
+
+    // Firestore에는 있는데 화면에는 없는 후보들 → 삭제
+    for (final entry in existingDocs.entries) {
+      final docId = entry.key;
+      if (!currentIds.contains(docId)) {
+        debugPrint("🧹 화면에 없는 후보 Firestore 삭제: $docId");
+        final docRef = collRef.doc(docId);
+        batch.delete(docRef);
+      }
+    }
+
+    // 삭제 예정 id들 한 번 더 강제 삭제
+    for (final id in _deletedCandidateIds) {
+      if (!currentIds.contains(id)) {
+        debugPrint("배치에서 강제 삭제: $id");
+        batch.delete(collRef.doc(id));
+      }
+    }
+
+    try {
+      await batch.commit();
+      debugPrint("🔥 Firestore batch commit 성공");
+    } on FirebaseException catch (e) {
+      debugPrint("❌ Firestore batch commit 실패: ${e.code} / ${e.message}");
+    } catch (e) {
+      debugPrint("❌ Firestore batch commit 알 수 없는 오류: $e");
+    }
+
+    _deletedCandidateIds.clear();
   }
 
   // UI
@@ -1074,13 +1182,27 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   }
 
   Widget _buildCandidateItem(Map<String, dynamic> c) {
-    final String imageUrl = c["imageUrl"] ?? "";
     final String name = c["name"] ?? "제목 없음";
     final List<String> types = (c["types"] as List?)?.cast<String>() ?? [];
 
+    final String imageUrl = c["imageUrl"] ?? "";
+    final Uint8List? localBytes = c["localBytes"] as Uint8List?;
+
     Widget leading;
 
-    if (imageUrl.isNotEmpty) {
+    if (localBytes != null) {
+      // 아직 업로드 안 된 새/수정 이미지 (메모리에만 있음)
+      leading = ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          localBytes,
+          width: 56,
+          height: 56,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else if (imageUrl.isNotEmpty) {
+      // 기존 DB 이미지
       leading = ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: CachedNetworkImage(
@@ -1099,6 +1221,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
         ),
       );
     } else {
+      // 이미지 정보가 전혀 없을 때
       leading = Container(
         width: 56,
         height: 56,
@@ -1298,7 +1421,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                           FilledButton(
                             onPressed: () async {
                               if (nameCtl.text.trim().isEmpty) return;
-
                               if (selectedTypes.length != 1) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -1308,40 +1430,22 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                 return;
                               }
 
-                              String url = currentImageUrl;
-                              String? storagePath;
-
+                              Uint8List? newBytes;
                               if (pickedFile != null) {
-                                final bytes = await _compressImage(pickedFile!);
-                                storagePath =
-                                    "categories/$_selectedCategoryId/candidates/${DateTime.now().millisecondsSinceEpoch}.jpg";
-                                final ref = FirebaseStorage.instance
-                                    .ref()
-                                    .child(storagePath);
-                                await ref.putData(bytes);
-                                url = await ref.getDownloadURL();
+                                newBytes = await _compressImage(pickedFile!);
                               }
 
-                              final categoryId = _selectedCategoryId!;
-                              final candId = candidate["id"] as String;
+                              setState(() {
+                                candidate["name"] = nameCtl.text.trim();
+                                candidate["types"] = selectedTypes.toList();
 
-                              await FirebaseFirestore.instance
-                                  .collection("categories")
-                                  .doc(categoryId)
-                                  .collection("candidates")
-                                  .doc(candId)
-                                  .update({
-                                    "name": nameCtl.text.trim(),
-                                    "imageUrl": url,
-                                    "types": selectedTypes.toList(),
-                                    if (storagePath != null)
-                                      "imagePath": storagePath,
-                                  });
-
-                              if (!mounted) return;
-
-                              // 새로 로딩해서 로컬 리스트 반영
-                              await _loadCategoryCandidates(categoryId);
+                                if (newBytes != null) {
+                                  candidate["localBytes"] = newBytes; // 새 이미지
+                                  candidate["imageUrl"] = ""; // 로컬 이미지 우선
+                                }
+                                candidate["isNew"] = candidate["id"] == null;
+                                // 기존 후보라도 수정됐다는걸 표시하고 싶으면 flag를 하나 더 넣어도 됨 (e.g. "isUpdated": true)
+                              });
 
                               if (context.mounted) Navigator.pop(context);
                             },
@@ -1361,8 +1465,6 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
   }
 
   Future<void> _deleteCandidate(Map<String, dynamic> candidate) async {
-    if (_selectedCategoryId == null) return;
-
     final name = candidate["name"] ?? "이 후보";
 
     final ok = await showDialog<bool>(
@@ -1387,20 +1489,21 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
 
     if (ok != true) return;
 
-    final categoryId = _selectedCategoryId!;
-    final candId = candidate["id"] as String;
+    final String? id = candidate["id"] as String?;
+    final String? imagePath = candidate["imagePath"] as String?;
 
-    await FirebaseFirestore.instance
-        .collection("categories")
-        .doc(categoryId)
-        .collection("candidates")
-        .doc(candId)
-        .delete();
-
-    if (!mounted) return;
+    if (id != null && id.isNotEmpty) {
+      _deletedCandidateIds.add(id);
+      debugPrint("삭제 예정 후보 id 추가: $id");
+    }
+    // Storage 파일 경로 삭제 목록에 추가
+    if (imagePath != null && imagePath.isNotEmpty) {
+      _deletedImagePaths.add(imagePath);
+      debugPrint("삭제 예정 이미지 path 추가: $imagePath");
+    }
 
     setState(() {
-      _candidates.removeWhere((c) => c["id"] == candId);
+      _candidates.remove(candidate);
     });
   }
 }
