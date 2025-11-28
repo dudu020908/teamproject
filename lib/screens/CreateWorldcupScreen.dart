@@ -793,6 +793,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                           },
                                         );
                                       }
+                                      setStateLocal(() => isSubmitting = false);
                                       return;
                                     }
 
