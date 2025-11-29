@@ -5,22 +5,18 @@ import 'package:teamproject/main.dart';
 import 'package:teamproject/screens/winner_screen.dart';
 
 void main() {
-  testWidgets('WinnerScreen shows fallback when arguments are missing',
-      (tester) async {
+  testWidgets('WinnerScreen shows fallback when arguments are missing', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => ThemeModeNotifier(),
-        child: const MaterialApp(
-          home: WinnerScreen(),
-        ),
+        child: const MaterialApp(home: WinnerScreen()),
       ),
     );
 
     await tester.pumpAndSettle();
 
-    expect(
-      find.text(WinnerScreen.missingArgumentMessage),
-      findsOneWidget,
-    );
+    expect(find.text(WinnerScreen.missingArgumentMessage), findsOneWidget);
   });
 }

@@ -163,14 +163,12 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                     const SizedBox(height: 12),
                                     ValueListenableBuilder<String?>(
                                       valueListenable: _genderNotifier,
-                                      builder:
-                                          (context, selectedGender, _) {
+                                      builder: (context, selectedGender, _) {
                                         return FocusTraversalGroup(
-                                          policy:
-                                              WidgetOrderTraversalPolicy(),
+                                          policy: WidgetOrderTraversalPolicy(),
                                           child: Wrap(
-                                            alignment: WrapAlignment
-                                                .spaceBetween,
+                                            alignment:
+                                                WrapAlignment.spaceBetween,
                                             spacing: 8,
                                             runSpacing: 8,
                                             children: [
@@ -249,17 +247,16 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                                 ),
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 20,
-                                                  vertical: 6,
-                                                ),
+                                                      horizontal: 20,
+                                                      vertical: 6,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   gradient: isDark
                                                       ? null
                                                       : const LinearGradient(
                                                           colors: [
                                                             Colors.pinkAccent,
-                                                            Colors
-                                                                .purpleAccent,
+                                                            Colors.purpleAccent,
                                                           ],
                                                         ),
                                                   color: isDark
@@ -274,13 +271,14 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                                             color: Colors
                                                                 .purpleAccent
                                                                 .withOpacity(
-                                                                    0.4),
+                                                                  0.4,
+                                                                ),
                                                             blurRadius: 10,
                                                             offset:
                                                                 const Offset(
-                                                              0,
-                                                              4,
-                                                            ),
+                                                                  0,
+                                                                  4,
+                                                                ),
                                                           ),
                                                         ],
                                                 ),
@@ -290,8 +288,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                                     color: isDark
                                                         ? Colors.white
                                                         : Colors.black,
-                                                    fontWeight:
-                                                        FontWeight.bold,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ),
@@ -309,8 +306,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                                   ? Colors.grey[700]
                                                   : Colors.grey[300],
                                               onChanged: (value) =>
-                                                  _ageNotifier.value =
-                                                      value,
+                                                  _ageNotifier.value = value,
                                             ),
                                           ],
                                         );
@@ -322,13 +318,11 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                       children: [
                                         Text(
                                           "10",
-                                          style: TextStyle(
-                                              color: subTextColor),
+                                          style: TextStyle(color: subTextColor),
                                         ),
                                         Text(
                                           "60",
-                                          style: TextStyle(
-                                              color: subTextColor),
+                                          style: TextStyle(color: subTextColor),
                                         ),
                                       ],
                                     ),
@@ -351,8 +345,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                   final isEnabled = selectedGender != null;
 
                                   return AnimatedContainer(
-                                    duration:
-                                        const Duration(milliseconds: 200),
+                                    duration: const Duration(milliseconds: 200),
                                     curve: Curves.easeInOut,
                                     width: double.infinity,
                                     height: 56,
@@ -360,25 +353,22 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                                       color: isEnabled
                                           ? const Color(0xFFFF5C8D)
                                           : (isDark
-                                              ? Colors.grey[800]
-                                              : Colors.grey[300]),
-                                      borderRadius:
-                                          BorderRadius.circular(40),
+                                                ? Colors.grey[800]
+                                                : Colors.grey[300]),
+                                      borderRadius: BorderRadius.circular(40),
                                       boxShadow: isEnabled
                                           ? [
                                               BoxShadow(
                                                 color: Colors.pinkAccent
                                                     .withOpacity(0.4),
                                                 blurRadius: 12,
-                                                offset:
-                                                    const Offset(0, 4),
+                                                offset: const Offset(0, 4),
                                               ),
                                             ]
                                           : [],
                                     ),
                                     child: TextButton(
-                                      onPressed:
-                                          isEnabled ? _next : null,
+                                      onPressed: isEnabled ? _next : null,
                                       child: Text(
                                         "다음으로",
                                         style: TextStyle(

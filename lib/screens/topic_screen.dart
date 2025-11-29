@@ -9,7 +9,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 class TopicScreen extends StatelessWidget {
   const TopicScreen({super.key});
 
-  // worldcups 컬렉션 스트림 (isDraft 필드 쓰면 where 로 필터해도 됨)
+  // worldcups 컬렉션 스트림
   Stream<QuerySnapshot> get categoriesStream => FirebaseFirestore.instance
       .collection("categories")
       .orderBy("createdAt", descending: true)

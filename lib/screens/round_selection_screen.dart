@@ -113,7 +113,7 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
         final inputLen = _controller.text.trim().length;
         final numFontSize = inputLen >= 3 ? 40.0 : 48.0;
 
-        // topic, emoji 는 arguments 에서 받지 않음 → 모두 widget 값 사용
+        // topic, emoji 는 모두 widget 값 사용
         final inputValue = int.tryParse(_controller.text) ?? 0;
         final isValid = inputValue >= 8 && inputValue <= 128;
 
@@ -292,7 +292,6 @@ class _RoundSelectionScreenState extends State<RoundSelectionScreen> {
 
                               const SizedBox(height: 24),
 
-                              // 기존: Wrap(...) 부분 전체 교체
                               Text(
                                 "빠른 선택",
                                 style: TextStyle(color: subTextColor),

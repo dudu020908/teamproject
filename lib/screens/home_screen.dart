@@ -132,7 +132,6 @@ class _HomeScreenState extends State<HomeScreen>
 
                       const SizedBox(height: 24),
 
-                      // My Pick 텍스트 (페이드 인)
                       FadeTransition(
                         opacity: _fadeAnim1,
                         child: Text(
