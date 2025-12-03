@@ -744,15 +744,13 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                     final categoryId = _selectedCategoryId!;
                                     final newName = nameCtl.text.trim();
 
-                                    // 이미지 압축 + 해시 계산
-                                    final bytes = await _compressImage(
-                                      pickedFile!,
-                                    );
+                                    final Uint8List compressedBytes =
+                                        await _compressImage(pickedFile!);
                                     final String newImageHash = md5
-                                        .convert(bytes)
+                                        .convert(compressedBytes)
                                         .toString();
 
-                                    // 이름 중복 체크
+                                    // 2) 이름 중복 체크 (현재 화면 기준)
                                     final bool nameExists = _candidates.any((
                                       c,
                                     ) {
@@ -761,22 +759,45 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                       return existingName == newName;
                                     });
 
-                                    // 이미지 중복 체크
-                                    final bool imageExists = _candidates.any((
-                                      c,
-                                    ) {
-                                      final existingHash =
-                                          (c["imageHash"] as String?) ?? "";
-                                      return existingHash.isNotEmpty &&
-                                          existingHash == newImageHash;
-                                    });
+                                    // 3) 이미지 중복 체크 - 현재 화면(_candidates) 기준
+                                    final bool imageExistsLocal = _candidates
+                                        .any((c) {
+                                          final existingHash =
+                                              (c["imageHash"] as String?) ?? "";
+                                          return existingHash.isNotEmpty &&
+                                              existingHash == newImageHash;
+                                        });
 
-                                    if (nameExists || imageExists) {
-                                      final msg = nameExists && imageExists
-                                          ? "이미 같은 이름과 사진이 있습니다."
-                                          : nameExists
-                                          ? "중복된 이름입니다."
-                                          : "중복된 사진입니다.";
+                                    // 4) 이미지 중복 체크 - Firestore 기준
+                                    final dupSnap = await FirebaseFirestore
+                                        .instance
+                                        .collection("categories")
+                                        .doc(categoryId)
+                                        .collection("candidates")
+                                        .where(
+                                          "imageHash",
+                                          isEqualTo: newImageHash,
+                                        )
+                                        .limit(1)
+                                        .get();
+
+                                    final bool imageExistsRemote =
+                                        dupSnap.docs.isNotEmpty;
+
+                                    if (nameExists ||
+                                        imageExistsLocal ||
+                                        imageExistsRemote) {
+                                      String msg;
+
+                                      if (nameExists &&
+                                          (imageExistsLocal ||
+                                              imageExistsRemote)) {
+                                        msg = "이미 같은 이름과 사진이 있습니다.";
+                                      } else if (nameExists) {
+                                        msg = "중복된 이름입니다.";
+                                      } else {
+                                        msg = "중복된 사진입니다.";
+                                      }
 
                                       if (context.mounted) {
                                         showDialog(
@@ -801,6 +822,9 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                       setStateLocal(() => isSubmitting = false);
                                       return;
                                     }
+                                    final bytes = await _compressImage(
+                                      pickedFile!,
+                                    );
 
                                     setState(() {
                                       _candidates.add({
@@ -946,6 +970,7 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
       final Uint8List? localBytes = c["localBytes"] as Uint8List?;
       String? imageUrl = c["imageUrl"] as String?;
       String? imagePath = c["imagePath"] as String?;
+      String? imageHash = c["imageHash"] as String?;
 
       if (id == null) {
         // 새 후보 (아직 Firestore에 없는 애)
@@ -958,11 +983,14 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
         await storageRef.putData(localBytes);
         final url = await storageRef.getDownloadURL();
 
+        imageHash ??= md5.convert(localBytes).toString();
+
         batch.set(docRef, {
           "name": name,
           "types": types,
           "imageUrl": url,
           "imagePath": storagePath,
+          "imageHash": imageHash,
           "createdAt": Timestamp.now(),
         });
       } else {
@@ -979,8 +1007,11 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
           await storageRef.putData(localBytes);
           final url = await storageRef.getDownloadURL();
 
+          final newHash = md5.convert(localBytes).toString();
+
           updateData["imageUrl"] = url;
           updateData["imagePath"] = storagePath;
+          updateData["imageHash"] = newHash;
         }
 
         if (existingDocs.containsKey(id)) {
@@ -1440,8 +1471,12 @@ class _CreateWorldcupScreenState extends State<CreateWorldcupScreen> {
                                 candidate["types"] = selectedTypes.toList();
 
                                 if (newBytes != null) {
+                                  final newHash = md5
+                                      .convert(newBytes)
+                                      .toString();
                                   candidate["localBytes"] = newBytes; // 새 이미지
                                   candidate["imageUrl"] = ""; // 로컬 이미지 우선
+                                  candidate["imageHash"] = newHash;
                                 }
                                 candidate["isNew"] = candidate["id"] == null;
                                 // 기존 후보라도 수정됐다는걸 표시하고 싶으면 flag를 하나 더 넣어도 됨 (e.g. "isUpdated": true)
